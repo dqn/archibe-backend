@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/dqn/chatlog"
+	"github.com/dqn/chatlog/chat"
 	_ "github.com/lib/pq"
 )
 
@@ -18,14 +19,14 @@ type Channel struct {
 }
 
 type Chat struct {
-	ChannelID      string
-	Timestamp      string
-	TimestampUsec  string
-	Message        []MessageElement
-	PurchaseAmount float64
-	CurrencyUnit   string
-	IsModerator    bool
-	Badge          Badge
+	ChannelID       string
+	Timestamp       string
+	TimestampUsec   string
+	MessageElements []MessageElement
+	PurchaseAmount  float64
+	CurrencyUnit    string
+	IsModerator     bool
+	Badge           Badge
 }
 
 type MessageElement struct {
@@ -47,6 +48,48 @@ func parseNagesen(str string) (string, float64, error) {
 	amount, err := strconv.ParseFloat(s, 64)
 	unit = strings.ReplaceAll(unit, "￥", "¥")
 	return unit, amount, err
+}
+
+func parseMessage(message *chat.Message) ([]MessageElement, error) {
+	me := make([]MessageElement, 0, len(message.Runs))
+	for _, v := range message.Runs {
+		var m MessageElement
+		switch {
+		case v.Emoji.EmojiId != "":
+			m.Type = "emoji"
+			m.Label = v.Emoji.Image.Accessibility.AccessibilityData.Label
+			m.URL = v.Emoji.Image.Thumbnails[1].URL
+		case v.Text != "":
+			m.Type = "text"
+			m.Text = v.Text
+		default:
+			err := fmt.Errorf("unknown message: %#v", v)
+			return nil, err
+		}
+
+		me = append(me, m)
+	}
+
+	return me, nil
+}
+
+func parseAuthorBadges(badges []chat.AuthorBadge) (bool, *Badge) {
+	var (
+		isModerator bool
+		badge       Badge
+	)
+	for _, b := range badges {
+		if b.LiveChatAuthorBadgeRenderer.Icon.IconType == "MODERATOR" {
+			isModerator = true
+			continue
+		}
+		badge = Badge{
+			Label: b.LiveChatAuthorBadgeRenderer.Accessibility.AccessibilityData.Label,
+			URL:   b.LiveChatAuthorBadgeRenderer.CustomThumbnail.Thumbnails[1].URL,
+		}
+	}
+
+	return isModerator, &badge
 }
 
 func run() error {
@@ -84,47 +127,20 @@ func run() error {
 						imageURL:  renderer.AuthorPhoto.Thumbnails[1].URL,
 					}
 
-					message := make([]MessageElement, 0, len(renderer.Message.Runs))
-					for _, v := range renderer.Message.Runs {
-						var m MessageElement
-						switch {
-						case v.Emoji.EmojiId != "":
-							m.Type = "emoji"
-							m.Label = v.Emoji.Image.Accessibility.AccessibilityData.Label
-							m.URL = v.Emoji.Image.Thumbnails[1].URL
-						case v.Text != "":
-							m.Type = "text"
-							m.Text = v.Text
-						default:
-							err = fmt.Errorf("unknown message: %#v", v)
-							return err
-						}
-
-						message = append(message, m)
+					me, err := parseMessage(&renderer.Message)
+					if err != nil {
+						return err
 					}
 
-					var (
-						badge       Badge
-						isModerator bool
-					)
-					for _, b := range renderer.AuthorBadges {
-						if b.LiveChatAuthorBadgeRenderer.Icon.IconType == "MODERATOR" {
-							isModerator = true
-							continue
-						}
-						badge = Badge{
-							Label: b.LiveChatAuthorBadgeRenderer.Accessibility.AccessibilityData.Label,
-							URL:   b.LiveChatAuthorBadgeRenderer.CustomThumbnail.Thumbnails[1].URL,
-						}
-					}
+					isModerator, badge := parseAuthorBadges(renderer.AuthorBadges)
 
 					chats = append(chats, Chat{
-						ChannelID:     renderer.AuthorExternalChannelId,
-						Timestamp:     renderer.TimestampText.SimpleText,
-						TimestampUsec: renderer.TimestampUsec,
-						Message:       message,
-						IsModerator:   isModerator,
-						Badge:         badge,
+						ChannelID:       renderer.AuthorExternalChannelId,
+						Timestamp:       renderer.TimestampText.SimpleText,
+						TimestampUsec:   renderer.TimestampUsec,
+						MessageElements: me,
+						IsModerator:     isModerator,
+						Badge:           *badge,
 					})
 
 				case item.LiveChatPaidMessageRenderer.ID != "":
@@ -136,23 +152,9 @@ func run() error {
 						imageURL:  renderer.AuthorPhoto.Thumbnails[1].URL,
 					}
 
-					message := make([]MessageElement, 0, len(renderer.Message.Runs))
-					for _, v := range renderer.Message.Runs {
-						var m MessageElement
-						switch {
-						case v.Emoji.EmojiId != "":
-							m.Type = "emoji"
-							m.Label = v.Emoji.Image.Accessibility.AccessibilityData.Label
-							m.URL = v.Emoji.Image.Thumbnails[1].URL
-						case v.Text != "":
-							m.Type = "text"
-							m.Text = v.Text
-						default:
-							err = fmt.Errorf("unknown message: %#v", v)
-							return err
-						}
-
-						message = append(message, m)
+					me, err := parseMessage(&renderer.Message)
+					if err != nil {
+						return err
 					}
 
 					unit, amount, err := parseNagesen(renderer.PurchaseAmountText.SimpleText)
@@ -161,12 +163,12 @@ func run() error {
 					}
 
 					chats = append(chats, Chat{
-						ChannelID:      renderer.AuthorExternalChannelId,
-						Timestamp:      renderer.TimestampText.SimpleText,
-						TimestampUsec:  renderer.TimestampUsec,
-						Message:        message,
-						PurchaseAmount: amount,
-						CurrencyUnit:   unit,
+						ChannelID:       renderer.AuthorExternalChannelId,
+						Timestamp:       renderer.TimestampText.SimpleText,
+						TimestampUsec:   renderer.TimestampUsec,
+						MessageElements: me,
+						PurchaseAmount:  amount,
+						CurrencyUnit:    unit,
 					})
 				}
 			}

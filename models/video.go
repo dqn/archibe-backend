@@ -3,9 +3,9 @@ package models
 import "time"
 
 type Video struct {
-	ID        int64     `db:"id"`
-	VideoID   string    `db:"video_id"`
-	ChannelID string    `db:"channel_id"`
-	CreatedAt time.Time `db:"created_at"`
-	UpdatedAt time.Time `db:"updated_at"`
+	ID        int64      `db:"id" json:"id"`
+	VideoID   string     `db:"video_id" json:"video_id"`
+	ChannelID string     `db:"channel_id" json:"channel_id"`
+	CreatedAt *time.Time `db:"created_at" json:"created_at"`
+	UpdatedAt *time.Time `db:"updated_at" json:"updated_at"`
 }

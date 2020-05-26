@@ -1,5 +1,5 @@
-github.com/dqn/chatlog v0.0.0-20200525165142-29732b2c91e6 h1:LXAOLV4JNFdaCg97VA/SI/qO6ZlkDxRkdJZAP+/tjCs=
-github.com/dqn/chatlog v0.0.0-20200525165142-29732b2c91e6/go.mod h1:zGROyJDGGUdOn+YAJ4vrn3Dr8IRocDeUc3GQB80zWWw=
+github.com/dqn/chatlog v0.0.0-20200525191249-2bb9432c83ce h1:lE6R+j2x8dUUUdBZXt4i9PnsHRakL2Ca1VclnrEVvVM=
+github.com/dqn/chatlog v0.0.0-20200525191249-2bb9432c83ce/go.mod h1:zGROyJDGGUdOn+YAJ4vrn3Dr8IRocDeUc3GQB80zWWw=
 github.com/go-sql-driver/mysql v1.4.0/go.mod h1:zAC/RDZ24gD3HViQzih4MyKcchzm+sOG5ZlKdlhCg5w=
 github.com/jmoiron/sqlx v1.2.0 h1:41Ip0zITnmWNR/vHV+S4m+VoUivnWY5E4OJfLZjCJMA=
 github.com/jmoiron/sqlx v1.2.0/go.mod h1:1FEQNm3xlJgrMD+FBdI9+xvCksHtbpVBBw5dYhBSsks=

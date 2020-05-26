@@ -18,13 +18,13 @@ type Chat struct {
 }
 
 type MessageElement struct {
-	Type  string
-	Text  string
-	Label string
-	URL   string
+	Type  string `json:"type"`
+	Text  string `json:"text"`
+	Label string `json:"label"`
+	URL   string `json:"url"`
 }
 
 type Badge struct {
-	Label string
-	URL   string
+	Label string `json:"label"`
+	URL   string `json:"url"`
 }

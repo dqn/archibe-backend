@@ -8,6 +8,7 @@ import (
 
 	"github.com/dqn/chatlog"
 	"github.com/dqn/chatlog/chat"
+	"github.com/dqn/tubekids/dbexec"
 	"github.com/dqn/tubekids/models"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -48,20 +49,39 @@ func parseMessage(message *chat.Message) ([]models.MessageElement, error) {
 func parseAuthorBadges(badges []chat.AuthorBadge) (bool, *models.Badge) {
 	var (
 		isModerator bool
-		badge       models.Badge
+		badge       *models.Badge
 	)
 	for _, b := range badges {
 		if b.LiveChatAuthorBadgeRenderer.Icon.IconType == "MODERATOR" {
 			isModerator = true
 			continue
 		}
-		badge = models.Badge{
+		badge = &models.Badge{
 			Label: b.LiveChatAuthorBadgeRenderer.Accessibility.AccessibilityData.Label,
 			URL:   b.LiveChatAuthorBadgeRenderer.CustomThumbnail.Thumbnails[1].URL,
 		}
 	}
 
-	return isModerator, &badge
+	return isModerator, badge
+}
+
+func processEachChatItem(cl *chatlog.Chatlog, handler func(item *chat.ChatItem) error) error {
+	for cl.Continuation != "" {
+		continuationActions, err := cl.Fecth()
+		if err != nil {
+			return err
+		}
+
+		for _, ca := range continuationActions {
+			for _, a := range ca.ReplayChatItemAction.Actions {
+				if err = handler(&a.AddChatItemAction.Item); err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	return nil
 }
 
 func run() error {
@@ -78,162 +98,100 @@ func run() error {
 	}
 
 	channelsMemo := make(map[string]struct{}, 1024)
-	channels := make([]models.Channel, 1024)
-	chats := make([]models.Chat, 1024)
+	channels := make([]models.Channel, 0, 1024)
+	chats := make([]models.Chat, 0, 1024)
 
 	fmt.Println("start fetching chats...")
 
-	for cl.Continuation != "" {
-		cas, err := cl.Fecth()
-		if err != nil {
-			return err
-		}
+	processEachChatItem(cl, func(item *chat.ChatItem) error {
+		switch {
+		case item.LiveChatTextMessageRenderer.ID != "":
+			renderer := item.LiveChatTextMessageRenderer
 
-		for _, ca := range cas {
-			for _, rcia := range ca.ReplayChatItemAction.Actions {
-				item := rcia.AddChatItemAction.Item
-				switch {
-				case item.LiveChatTextMessageRenderer.ID != "":
-					renderer := item.LiveChatTextMessageRenderer
-
-					if _, ok := channelsMemo[renderer.AuthorExternalChannelID]; !ok {
-						channels = append(channels, models.Channel{
-							ChannelID: renderer.AuthorExternalChannelID,
-							Name:      renderer.AuthorName.SimpleText,
-							ImageURL:  renderer.AuthorPhoto.Thumbnails[1].URL,
-						})
-						channelsMemo[renderer.AuthorExternalChannelID] = struct{}{}
-					}
-
-					me, err := parseMessage(&renderer.Message)
-					if err != nil {
-						return err
-					}
-
-					isModerator, badge := parseAuthorBadges(renderer.AuthorBadges)
-
-					chats = append(chats, models.Chat{
-						ChannelID:       renderer.AuthorExternalChannelID,
-						VideoID:         videoID,
-						Timestamp:       renderer.TimestampText.SimpleText,
-						TimestampUsec:   renderer.TimestampUsec,
-						MessageElements: me,
-						IsModerator:     isModerator,
-						Badge:           *badge,
-					})
-
-				case item.LiveChatPaidMessageRenderer.ID != "":
-					renderer := item.LiveChatPaidMessageRenderer
-
-					if _, ok := channelsMemo[renderer.AuthorExternalChannelID]; !ok {
-						channels = append(channels, models.Channel{
-							ChannelID: renderer.AuthorExternalChannelID,
-							Name:      renderer.AuthorName.SimpleText,
-							ImageURL:  renderer.AuthorPhoto.Thumbnails[1].URL,
-						})
-						channelsMemo[renderer.AuthorExternalChannelID] = struct{}{}
-					}
-
-					me, err := parseMessage(&renderer.Message)
-					if err != nil {
-						return err
-					}
-
-					unit, amount, err := parseNagesen(renderer.PurchaseAmountText.SimpleText)
-					if err != nil {
-						return err
-					}
-
-					chats = append(chats, models.Chat{
-						ChannelID:       renderer.AuthorExternalChannelID,
-						VideoID:         videoID,
-						Timestamp:       renderer.TimestampText.SimpleText,
-						TimestampUsec:   renderer.TimestampUsec,
-						MessageElements: me,
-						PurchaseAmount:  amount,
-						CurrencyUnit:    unit,
-					})
-				}
+			if _, ok := channelsMemo[renderer.AuthorExternalChannelID]; !ok {
+				channels = append(channels, models.Channel{
+					ChannelID: renderer.AuthorExternalChannelID,
+					Name:      renderer.AuthorName.SimpleText,
+					ImageURL:  renderer.AuthorPhoto.Thumbnails[1].URL,
+				})
+				channelsMemo[renderer.AuthorExternalChannelID] = struct{}{}
 			}
-		}
-	}
 
-	fmt.Println("start inserting to Database...")
+			me, err := parseMessage(&renderer.Message)
+			if err != nil {
+				return err
+			}
+
+			isModerator, badge := parseAuthorBadges(renderer.AuthorBadges)
+
+			chats = append(chats, models.Chat{
+				ChannelID:       renderer.AuthorExternalChannelID,
+				VideoID:         videoID,
+				Timestamp:       renderer.TimestampText.SimpleText,
+				TimestampUsec:   renderer.TimestampUsec,
+				MessageElements: me,
+				IsModerator:     isModerator,
+				Badge:           badge,
+			})
+
+		case item.LiveChatPaidMessageRenderer.ID != "":
+			renderer := item.LiveChatPaidMessageRenderer
+
+			if _, ok := channelsMemo[renderer.AuthorExternalChannelID]; !ok {
+				channels = append(channels, models.Channel{
+					ChannelID: renderer.AuthorExternalChannelID,
+					Name:      renderer.AuthorName.SimpleText,
+					ImageURL:  renderer.AuthorPhoto.Thumbnails[1].URL,
+				})
+				channelsMemo[renderer.AuthorExternalChannelID] = struct{}{}
+			}
+
+			me, err := parseMessage(&renderer.Message)
+			if err != nil {
+				return err
+			}
+
+			unit, amount, err := parseNagesen(renderer.PurchaseAmountText.SimpleText)
+			if err != nil {
+				return err
+			}
+
+			chats = append(chats, models.Chat{
+				ChannelID:       renderer.AuthorExternalChannelID,
+				VideoID:         videoID,
+				Timestamp:       renderer.TimestampText.SimpleText,
+				TimestampUsec:   renderer.TimestampUsec,
+				MessageElements: me,
+				PurchaseAmount:  amount,
+				CurrencyUnit:    unit,
+			})
+		}
+
+		return nil
+	})
+
+	fmt.Println("start inserting to database...")
 
 	db, err := sqlx.Open("postgres", dsn)
 	if err != nil {
 		return err
 	}
+	dbx := dbexec.NewExecutor(db)
 
-	_, err = db.NamedExec(
-		`INSERT INTO videos (
-			channel_id,
-			video_id,
-			created_at,
-			updated_at
-		) VALUES (
-			:channel_id,
-			:video_id,
-			:created_at,
-			:updated_at
-		)`,
-		models.Video{
-			VideoID:   videoID,
-			ChannelID: "TODO",
-		},
-	)
+	_, err = dbx.Videos.InsertOne(&models.Video{
+		VideoID:   videoID,
+		ChannelID: "TODO",
+	})
 	if err != nil {
 		return err
 	}
 
-	_, err = db.NamedExec(
-		`INSERT INTO channels (
-			channel_id,
-			name,
-			image_url,
-			created_at,
-			updated_at
-		) VALUES (
-			:channel_id,
-			:name,
-			:image_url,
-			:created_at,
-			:updated_at
-		)`,
-		channels,
-	)
+	_, err = dbx.Channels.InsertMany(channels)
 	if err != nil {
 		return err
 	}
 
-	_, err = db.NamedExec(
-		`INSERT INTO chats (
-			channel_id,
-			video_id,
-			timestamp,
-			timestamp_usec,
-			-- message_elements,
-			purchase_amount,
-			currency_unit,
-			is_moderator,
-			-- badge,
-			created_at,
-			updated_at
-		) VALUES (
-			:channel_id,
-			:video_id,
-			:timestamp,
-			:timestamp_usec,
-			-- message_elements,
-			COALESCE(:purchase_amount, DEFAULT),
-			COALESCE(:currency_unit, DEFAULT),
-			COALESCE(:is_moderator, DEFAULT),
-			-- :badge,
-			:created_at,
-			:updated_at
-		);`,
-		chats,
-	)
+	_, err = dbx.Chats.InsertMany(chats)
 	if err != nil {
 		return err
 	}

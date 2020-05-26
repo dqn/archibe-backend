@@ -51,7 +51,7 @@ func (e *ChannelsExecutor) InsertMany(channels []models.Channel) (sql.Result, er
 			created_at TIMESTAMPTZ,
 			updated_at TIMESTAMPTZ
 		)
-	;`
+	`
 
 	b, err := json.Marshal(channels)
 	if err != nil {
@@ -79,7 +79,7 @@ func (e *VideosExecutor) InsertOne(video *models.Video) (sql.Result, error) {
 		COALESCE(:updated_at, NOW())
 	)`
 
-	return e.DB.Exec(sql, video)
+	return e.DB.NamedExec(sql, video)
 }
 
 type ChatsExecutor struct {
@@ -107,10 +107,10 @@ func (e *ChatsExecutor) InsertMany(chats []models.Chat) (sql.Result, error) {
 		timestamp,
 		timestamp_usec,
 		message_elements,
-		COALESCE(purchase_amount, DEFAULT),
-		COALESCE(currency_unit, DEFAULT),
-		COALESCE(is_moderator, DEFAULT),
-		COALESCE(badge, DEFAULT),
+		COALESCE(purchase_amount, 0.0),
+		COALESCE(currency_unit, ''),
+		COALESCE(is_moderator, FALSE),
+		COALESCE(badge, '{}'),
 		COALESCE(created_at, NOW()),
 		COALESCE(updated_at, NOW())
 	FROM
@@ -127,7 +127,7 @@ func (e *ChatsExecutor) InsertMany(chats []models.Chat) (sql.Result, error) {
 			created_at TIMESTAMPTZ,
 			updated_at TIMESTAMPTZ
 		)
-	;`
+	`
 
 	b, err := json.Marshal(chats)
 	if err != nil {

@@ -1,0 +1,34 @@
+DROP TABLE IF EXISTS channels CASCADE;
+CREATE TABLE channels (
+  id BIGSERIAL NOT NULL PRIMARY KEY,
+  channel_id TEXT NOT NULL DEFAULT '',
+  name TEXT NOT NULL DEFAULT '',
+  image_url TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL
+);
+
+DROP TABLE IF EXISTS videos CASCADE;
+CREATE TABLE videos (
+  id BIGSERIAL NOT NULL PRIMARY KEY,
+  video_id TEXT NOT NULL DEFAULT '',
+  channel_id TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL
+);
+
+DROP TABLE IF EXISTS chats CASCADE;
+CREATE TABLE chats (
+  id BIGSERIAL NOT NULL PRIMARY KEY,
+  channel_id TEXT NOT NULL DEFAULT '',
+  video_id TEXT NOT NULL DEFAULT '',
+  timestamp TEXT NOT NULL DEFAULT '',
+  timestamp_usec TEXT NOT NULL DEFAULT '',
+  message_elements JSONB NOT NULL DEFAULT '[]',
+  purchase_amount NUMERIC DEFAULT 0.0,
+  currency_unit TEXT NOT NULL DEFAULT '',
+  is_moderator BOOLEAN NOT NULL DEFAULT FALSE,
+  badge JSONB NOT NULL DEFAULT '{}',
+  created_at TIMESTAMPTZ NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL
+);

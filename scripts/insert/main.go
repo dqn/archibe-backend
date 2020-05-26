@@ -9,37 +9,9 @@ import (
 
 	"github.com/dqn/chatlog"
 	"github.com/dqn/chatlog/chat"
+	"github.com/dqn/tubekids/models"
 	_ "github.com/lib/pq"
 )
-
-type Channel struct {
-	ChannelID string
-	Name      string
-	imageURL  string
-}
-
-type Chat struct {
-	ChannelID       string
-	Timestamp       string
-	TimestampUsec   string
-	MessageElements []MessageElement
-	PurchaseAmount  float64
-	CurrencyUnit    string
-	IsModerator     bool
-	Badge           Badge
-}
-
-type MessageElement struct {
-	Type  string
-	Text  string
-	Label string
-	URL   string
-}
-
-type Badge struct {
-	Label string
-	URL   string
-}
 
 func parseNagesen(str string) (string, float64, error) {
 	unit := strings.TrimRight(str, "0123456789.,")
@@ -50,10 +22,10 @@ func parseNagesen(str string) (string, float64, error) {
 	return unit, amount, err
 }
 
-func parseMessage(message *chat.Message) ([]MessageElement, error) {
-	me := make([]MessageElement, 0, len(message.Runs))
+func parseMessage(message *chat.Message) ([]models.MessageElement, error) {
+	me := make([]models.MessageElement, 0, len(message.Runs))
 	for _, v := range message.Runs {
-		var m MessageElement
+		var m models.MessageElement
 		switch {
 		case v.Emoji.EmojiId != "":
 			m.Type = "emoji"
@@ -73,17 +45,17 @@ func parseMessage(message *chat.Message) ([]MessageElement, error) {
 	return me, nil
 }
 
-func parseAuthorBadges(badges []chat.AuthorBadge) (bool, *Badge) {
+func parseAuthorBadges(badges []chat.AuthorBadge) (bool, *models.Badge) {
 	var (
 		isModerator bool
-		badge       Badge
+		badge       models.Badge
 	)
 	for _, b := range badges {
 		if b.LiveChatAuthorBadgeRenderer.Icon.IconType == "MODERATOR" {
 			isModerator = true
 			continue
 		}
-		badge = Badge{
+		badge = models.Badge{
 			Label: b.LiveChatAuthorBadgeRenderer.Accessibility.AccessibilityData.Label,
 			URL:   b.LiveChatAuthorBadgeRenderer.CustomThumbnail.Thumbnails[1].URL,
 		}
@@ -105,8 +77,8 @@ func run() error {
 		return err
 	}
 
-	channels := make(map[string]Channel, 1024)
-	chats := make([]Chat, 1024)
+	channels := make(map[string]models.Channel, 1024)
+	chats := make([]models.Chat, 1024)
 
 	for cl.Continuation != "" {
 		cas, err := cl.Fecth()
@@ -121,10 +93,10 @@ func run() error {
 				case item.LiveChatTextMessageRenderer.ID != "":
 					renderer := item.LiveChatTextMessageRenderer
 
-					channels[renderer.AuthorExternalChannelId] = Channel{
+					channels[renderer.AuthorExternalChannelId] = models.Channel{
 						ChannelID: renderer.AuthorExternalChannelId,
 						Name:      renderer.AuthorName.SimpleText,
-						imageURL:  renderer.AuthorPhoto.Thumbnails[1].URL,
+						ImageURL:  renderer.AuthorPhoto.Thumbnails[1].URL,
 					}
 
 					me, err := parseMessage(&renderer.Message)
@@ -134,8 +106,9 @@ func run() error {
 
 					isModerator, badge := parseAuthorBadges(renderer.AuthorBadges)
 
-					chats = append(chats, Chat{
+					chats = append(chats, models.Chat{
 						ChannelID:       renderer.AuthorExternalChannelId,
+						VideoID:         videoID,
 						Timestamp:       renderer.TimestampText.SimpleText,
 						TimestampUsec:   renderer.TimestampUsec,
 						MessageElements: me,
@@ -146,10 +119,10 @@ func run() error {
 				case item.LiveChatPaidMessageRenderer.ID != "":
 					renderer := item.LiveChatPaidMessageRenderer
 
-					channels[renderer.AuthorExternalChannelId] = Channel{
+					channels[renderer.AuthorExternalChannelId] = models.Channel{
 						ChannelID: renderer.AuthorExternalChannelId,
 						Name:      renderer.AuthorName.SimpleText,
-						imageURL:  renderer.AuthorPhoto.Thumbnails[1].URL,
+						ImageURL:  renderer.AuthorPhoto.Thumbnails[1].URL,
 					}
 
 					me, err := parseMessage(&renderer.Message)
@@ -162,8 +135,9 @@ func run() error {
 						return err
 					}
 
-					chats = append(chats, Chat{
+					chats = append(chats, models.Chat{
 						ChannelID:       renderer.AuthorExternalChannelId,
+						VideoID:         videoID,
 						Timestamp:       renderer.TimestampText.SimpleText,
 						TimestampUsec:   renderer.TimestampUsec,
 						MessageElements: me,

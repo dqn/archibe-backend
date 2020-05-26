@@ -3,7 +3,7 @@ package models
 import "time"
 
 type Channel struct {
-	id        int64     `db:"id"`
+	ID        int64     `db:"id"`
 	ChannelID string    `db:"channel_id"`
 	Name      string    `db:"name"`
 	ImageURL  string    `db:"image_url"`

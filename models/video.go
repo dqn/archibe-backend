@@ -3,7 +3,7 @@ package models
 import "time"
 
 type Video struct {
-	id        int64     `db:"id"`
+	ID        int64     `db:"id"`
 	VideoID   string    `db:"video_id"`
 	ChannelID string    `db:"channel_id"`
 	CreatedAt time.Time `db:"created_at"`

@@ -3,7 +3,7 @@ package models
 import "time"
 
 type Chat struct {
-	id              int64            `db:"id"`
+	ID              int64            `db:"id"`
 	ChannelID       string           `db:"channel_id"`
 	VideoID         string           `db:"video_id"`
 	Timestamp       string           `db:"timestamp"`

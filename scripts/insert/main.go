@@ -1,15 +1,16 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/dqn/chatlog"
 	"github.com/dqn/chatlog/chat"
 	"github.com/dqn/tubekids/models"
+	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
 
@@ -149,23 +150,30 @@ func run() error {
 		}
 	}
 
-	pool, err := sql.Open("postgres", dsn)
+	db, err := sqlx.Open("postgres", dsn)
 	if err != nil {
 		return err
 	}
 
-	rows, err := pool.Query("SELECT 1;")
+	_, err = db.NamedExec(
+		`INSERT INTO channels (
+			name,
+			created_at,
+			updated_at
+		) VALUES (
+			:name,
+			:created_at,
+			:updated_at
+		);`,
+		models.Channel{
+			Name:      "hoge",
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+		},
+	)
+
 	if err != nil {
 		return err
-	}
-	defer rows.Close()
-
-	if rows.Next() {
-		var id int
-		if err = rows.Scan(&id); err != nil {
-			return err
-		}
-		fmt.Println(id)
 	}
 
 	return nil

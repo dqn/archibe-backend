@@ -5,7 +5,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/dqn/chatlog"
 	"github.com/dqn/chatlog/chat"
@@ -28,7 +27,7 @@ func parseMessage(message *chat.Message) ([]models.MessageElement, error) {
 	for _, v := range message.Runs {
 		var m models.MessageElement
 		switch {
-		case v.Emoji.EmojiId != "":
+		case v.Emoji.EmojiID != "":
 			m.Type = "emoji"
 			m.Label = v.Emoji.Image.Accessibility.AccessibilityData.Label
 			m.URL = v.Emoji.Image.Thumbnails[1].URL
@@ -78,8 +77,11 @@ func run() error {
 		return err
 	}
 
-	channels := make(map[string]models.Channel, 1024)
+	channelsMemo := make(map[string]struct{}, 1024)
+	channels := make([]models.Channel, 1024)
 	chats := make([]models.Chat, 1024)
+
+	fmt.Println("start fetching chats...")
 
 	for cl.Continuation != "" {
 		cas, err := cl.Fecth()
@@ -94,10 +96,13 @@ func run() error {
 				case item.LiveChatTextMessageRenderer.ID != "":
 					renderer := item.LiveChatTextMessageRenderer
 
-					channels[renderer.AuthorExternalChannelId] = models.Channel{
-						ChannelID: renderer.AuthorExternalChannelId,
-						Name:      renderer.AuthorName.SimpleText,
-						ImageURL:  renderer.AuthorPhoto.Thumbnails[1].URL,
+					if _, ok := channelsMemo[renderer.AuthorExternalChannelID]; !ok {
+						channels = append(channels, models.Channel{
+							ChannelID: renderer.AuthorExternalChannelID,
+							Name:      renderer.AuthorName.SimpleText,
+							ImageURL:  renderer.AuthorPhoto.Thumbnails[1].URL,
+						})
+						channelsMemo[renderer.AuthorExternalChannelID] = struct{}{}
 					}
 
 					me, err := parseMessage(&renderer.Message)
@@ -108,7 +113,7 @@ func run() error {
 					isModerator, badge := parseAuthorBadges(renderer.AuthorBadges)
 
 					chats = append(chats, models.Chat{
-						ChannelID:       renderer.AuthorExternalChannelId,
+						ChannelID:       renderer.AuthorExternalChannelID,
 						VideoID:         videoID,
 						Timestamp:       renderer.TimestampText.SimpleText,
 						TimestampUsec:   renderer.TimestampUsec,
@@ -120,10 +125,13 @@ func run() error {
 				case item.LiveChatPaidMessageRenderer.ID != "":
 					renderer := item.LiveChatPaidMessageRenderer
 
-					channels[renderer.AuthorExternalChannelId] = models.Channel{
-						ChannelID: renderer.AuthorExternalChannelId,
-						Name:      renderer.AuthorName.SimpleText,
-						ImageURL:  renderer.AuthorPhoto.Thumbnails[1].URL,
+					if _, ok := channelsMemo[renderer.AuthorExternalChannelID]; !ok {
+						channels = append(channels, models.Channel{
+							ChannelID: renderer.AuthorExternalChannelID,
+							Name:      renderer.AuthorName.SimpleText,
+							ImageURL:  renderer.AuthorPhoto.Thumbnails[1].URL,
+						})
+						channelsMemo[renderer.AuthorExternalChannelID] = struct{}{}
 					}
 
 					me, err := parseMessage(&renderer.Message)
@@ -137,7 +145,7 @@ func run() error {
 					}
 
 					chats = append(chats, models.Chat{
-						ChannelID:       renderer.AuthorExternalChannelId,
+						ChannelID:       renderer.AuthorExternalChannelID,
 						VideoID:         videoID,
 						Timestamp:       renderer.TimestampText.SimpleText,
 						TimestampUsec:   renderer.TimestampUsec,
@@ -150,31 +158,87 @@ func run() error {
 		}
 	}
 
+	fmt.Println("start inserting to Database...")
+
 	db, err := sqlx.Open("postgres", dsn)
 	if err != nil {
 		return err
 	}
 
 	_, err = db.NamedExec(
-		`INSERT INTO channels (
-			name,
+		`INSERT INTO videos (
+			channel_id,
+			video_id,
 			created_at,
 			updated_at
 		) VALUES (
-			:name,
+			:channel_id,
+			:video_id,
 			:created_at,
 			:updated_at
-		);`,
-		models.Channel{
-			Name:      "hoge",
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
+		)`,
+		models.Video{
+			VideoID:   videoID,
+			ChannelID: "TODO",
 		},
 	)
-
 	if err != nil {
 		return err
 	}
+
+	_, err = db.NamedExec(
+		`INSERT INTO channels (
+			channel_id,
+			name,
+			image_url,
+			created_at,
+			updated_at
+		) VALUES (
+			:channel_id,
+			:name,
+			:image_url,
+			:created_at,
+			:updated_at
+		)`,
+		channels,
+	)
+	if err != nil {
+		return err
+	}
+
+	_, err = db.NamedExec(
+		`INSERT INTO chats (
+			channel_id,
+			video_id,
+			timestamp,
+			timestamp_usec,
+			-- message_elements,
+			purchase_amount,
+			currency_unit,
+			is_moderator,
+			-- badge,
+			created_at,
+			updated_at
+		) VALUES (
+			:channel_id,
+			:video_id,
+			:timestamp,
+			:timestamp_usec,
+			-- message_elements,
+			COALESCE(:purchase_amount, DEFAULT),
+			COALESCE(:currency_unit, DEFAULT),
+			COALESCE(:is_moderator, DEFAULT),
+			-- :badge,
+			:created_at,
+			:updated_at
+		);`,
+		chats,
+	)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("completed!")
 
 	return nil
 }

@@ -27,6 +27,7 @@ CREATE TABLE chats (
   message_elements JSONB NOT NULL DEFAULT '[]',
   purchase_amount NUMERIC DEFAULT 0.0,
   currency_unit TEXT NOT NULL DEFAULT '',
+  super_chat_context JSONB NOT NULL DEFAULT '{}',
   created_at TIMESTAMPTZ NOT NULL,
   updated_at TIMESTAMPTZ NOT NULL
 );

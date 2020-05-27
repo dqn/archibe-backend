@@ -14,6 +14,10 @@ import (
 	_ "github.com/lib/pq"
 )
 
+func toHex(d int) string {
+	return strconv.FormatInt(int64(d), 16)
+}
+
 func parseNagesen(str string) (string, float64, error) {
 	unit := strings.TrimRight(str, "0123456789.,")
 	s := strings.TrimLeft(str, unit)
@@ -159,6 +163,13 @@ func run() error {
 				MessageElements: me,
 				PurchaseAmount:  amount,
 				CurrencyUnit:    unit,
+				SuperChatContext: &models.SuperChatContext{
+					HeaderBackgroundColor: toHex(renderer.HeaderBackgroundColor),
+					HeaderTextColor:       toHex(renderer.HeaderTextColor),
+					BodyBackgroundColor:   toHex(renderer.BodyBackgroundColor),
+					BodyTextColor:         toHex(renderer.BodyTextColor),
+					AuthorNameTextColor:   toHex(renderer.AuthorNameTextColor),
+				},
 			})
 		}
 

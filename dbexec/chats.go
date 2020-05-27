@@ -22,6 +22,7 @@ func (e *ChatsExecutor) InsertMany(chats []models.Chat) (sql.Result, error) {
 		message_elements,
 		purchase_amount,
 		currency_unit,
+		super_chat_context,
 		created_at,
 		updated_at
 	)
@@ -31,8 +32,9 @@ func (e *ChatsExecutor) InsertMany(chats []models.Chat) (sql.Result, error) {
 		timestamp,
 		timestamp_usec,
 		message_elements,
-		purchase_amount,
-		currency_unit,
+		COALESCE(purchase_amount, 0),
+		COALESCE(currency_unit, ''),
+		COALESCE(super_chat_context, '{}'),
 		COALESCE(created_at, NOW()),
 		COALESCE(updated_at, NOW())
 	FROM
@@ -44,6 +46,7 @@ func (e *ChatsExecutor) InsertMany(chats []models.Chat) (sql.Result, error) {
 			message_elements JSONB,
 			purchase_amount NUMERIC,
 			currency_unit TEXT,
+			super_chat_context JSONB,
 			created_at TIMESTAMPTZ,
 			updated_at TIMESTAMPTZ
 		)

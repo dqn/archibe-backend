@@ -20,7 +20,7 @@ CREATE TABLE videos (
 DROP TABLE IF EXISTS chats CASCADE;
 CREATE TABLE chats (
   id BIGSERIAL NOT NULL PRIMARY KEY,
-  channel_id TEXT NOT NULL DEFAULT '',
+  author_channel_id TEXT NOT NULL DEFAULT '',
   video_id TEXT NOT NULL DEFAULT '',
   timestamp TEXT NOT NULL DEFAULT '',
   timestamp_usec TEXT NOT NULL DEFAULT '',

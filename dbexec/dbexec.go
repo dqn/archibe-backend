@@ -51,6 +51,11 @@ func (e *ChannelsExecutor) InsertMany(channels []models.Channel) (sql.Result, er
 			created_at TIMESTAMPTZ,
 			updated_at TIMESTAMPTZ
 		)
+	ON CONFLICT (channel_id) DO UPDATE SET
+		channel_id = EXCLUDED.channel_id,
+		name = EXCLUDED.name,
+		image_url = EXCLUDED.image_url,
+		updated_at = EXCLUDED.updated_at
 	`
 
 	b, err := json.Marshal(channels)
@@ -68,16 +73,18 @@ type VideosExecutor struct {
 func (e *VideosExecutor) InsertOne(video *models.Video) (sql.Result, error) {
 	sql := `
 	INSERT INTO videos (
-		channel_id,
 		video_id,
+		channel_id,
 		created_at,
 		updated_at
 	) VALUES (
-		:channel_id,
 		:video_id,
+		:channel_id,
 		COALESCE(:created_at, NOW()),
 		COALESCE(:updated_at, NOW())
-	)`
+	)
+	ON CONFLICT(video_id) DO NOTHING
+	`
 
 	return e.DB.NamedExec(sql, video)
 }
@@ -96,37 +103,32 @@ func (e *ChatsExecutor) InsertMany(chats []models.Chat) (sql.Result, error) {
 		message_elements,
 		purchase_amount,
 		currency_unit,
-		is_moderator,
-		badge,
 		created_at,
 		updated_at
 	)
 	SELECT
-		channel_id,
+		author_channel_id,
 		video_id,
 		timestamp,
 		timestamp_usec,
 		message_elements,
 		COALESCE(purchase_amount, 0.0),
 		COALESCE(currency_unit, ''),
-		COALESCE(is_moderator, FALSE),
-		COALESCE(badge, '{}'),
 		COALESCE(created_at, NOW()),
 		COALESCE(updated_at, NOW())
 	FROM
     jsonb_to_recordset($1) AS x(
-			channel_id TEXT,
+			author_channel_id TEXT,
 			video_id TEXT,
 			timestamp TEXT,
 			timestamp_usec TEXT,
 			message_elements JSONB,
 			purchase_amount NUMERIC,
 			currency_unit TEXT,
-			is_moderator BOOLEAN,
-			badge JSONB,
 			created_at TIMESTAMPTZ,
 			updated_at TIMESTAMPTZ
 		)
+	ON CONFLICT(author_channel_id, video_id, timestamp_usec) DO NOTHING
 	`
 
 	b, err := json.Marshal(chats)

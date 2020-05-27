@@ -4,7 +4,7 @@ import "time"
 
 type Chat struct {
 	ID              int64            `db:"id" json:"id"`
-	ChannelID       string           `db:"channel_id" json:"channel_id"`
+	AuthorChannelID string           `db:"channel_id" json:"author_channel_id"`
 	VideoID         string           `db:"video_id" json:"video_id"`
 	Timestamp       string           `db:"timestamp" json:"timestamp"`
 	TimestampUsec   string           `db:"timestamp_usec" json:"timestamp_usec"`

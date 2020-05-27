@@ -36,7 +36,6 @@ func (e *ChannelsExecutor) InsertMany(channels []models.Channel) (sql.Result, er
 			updated_at TIMESTAMPTZ
 		)
 	ON CONFLICT (channel_id) DO UPDATE SET
-		channel_id = EXCLUDED.channel_id,
 		name = EXCLUDED.name,
 		image_url = EXCLUDED.image_url,
 		updated_at = EXCLUDED.updated_at

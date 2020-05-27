@@ -42,9 +42,6 @@ func (e *BadgesExecutor) InsertMany(badges []models.Badge) (sql.Result, error) {
 			updated_at TIMESTAMPTZ
 		)
 	ON CONFLICT (owner_channel_id, liver_channel_id, badge_type) DO UPDATE SET
-		owner_channel_id = EXCLUDED.owner_channel_id,
-		liver_channel_id = EXCLUDED.liver_channel_id,
-		badge_type = EXCLUDED.badge_type,
 		image_url = EXCLUDED.image_url,
 		label = EXCLUDED.label,
 		updated_at = EXCLUDED.updated_at

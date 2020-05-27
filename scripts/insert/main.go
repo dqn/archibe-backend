@@ -18,6 +18,10 @@ func toHex(d int) string {
 	return strconv.FormatInt(int64(d), 16)
 }
 
+func retrieveImageURL(thumbnails []chat.Thumbnail) string {
+	return thumbnails[len(thumbnails)-1].URL
+}
+
 func parseNagesen(str string) (string, float64, error) {
 	unit := strings.TrimRight(str, "0123456789.,")
 	s := strings.TrimLeft(str, unit)
@@ -34,7 +38,7 @@ func parseMessage(message *chat.Message) ([]models.MessageElement, error) {
 		switch {
 		case v.Emoji.EmojiID != "":
 			m.Type = "emoji"
-			m.ImageURL = v.Emoji.Image.Thumbnails[1].URL
+			m.ImageURL = retrieveImageURL(v.Emoji.Image.Thumbnails)
 			m.Label = v.Emoji.Image.Accessibility.AccessibilityData.Label
 		case v.Text != "":
 			m.Type = "text"
@@ -98,7 +102,7 @@ func run() error {
 			channels = append(channels, models.Channel{
 				ChannelID: renderer.AuthorExternalChannelID,
 				Name:      renderer.AuthorName.SimpleText,
-				ImageURL:  renderer.AuthorPhoto.Thumbnails[1].URL,
+				ImageURL:  retrieveImageURL(renderer.AuthorPhoto.Thumbnails),
 			})
 
 			me, err := parseMessage(&renderer.Message)
@@ -123,7 +127,7 @@ func run() error {
 						OwnerChannelID: renderer.AuthorExternalChannelID,
 						LiverChannelID: channelID,
 						BadgeType:      "member",
-						ImageURL:       b.LiveChatAuthorBadgeRenderer.CustomThumbnail.Thumbnails[1].URL,
+						ImageURL:       retrieveImageURL(b.LiveChatAuthorBadgeRenderer.CustomThumbnail.Thumbnails),
 						Label:          b.LiveChatAuthorBadgeRenderer.Accessibility.AccessibilityData.Label,
 					})
 				}
@@ -143,7 +147,7 @@ func run() error {
 			channels = append(channels, models.Channel{
 				ChannelID: renderer.AuthorExternalChannelID,
 				Name:      renderer.AuthorName.SimpleText,
-				ImageURL:  renderer.AuthorPhoto.Thumbnails[1].URL,
+				ImageURL:  retrieveImageURL(renderer.AuthorPhoto.Thumbnails),
 			})
 
 			me, err := parseMessage(&renderer.Message)

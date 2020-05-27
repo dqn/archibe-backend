@@ -8,7 +8,7 @@
 $ make startdb
 ```
 
-### Init Database
+### Init database
 
 ```bash
 $ make initdb
@@ -17,5 +17,5 @@ $ make initdb
 ### Insert data
 
 ```bash
-$ VIDEO_ID=<VIDEO_ID> make insert
+$ CHANNEL_ID=<channel-id> VIDEO_ID=<video-id> make insert
 ```

@@ -33,11 +33,11 @@ CREATE TABLE chats (
 
 DROP TABLE IF EXISTS badges CASCADE;
 CREATE TABLE badges (
-	owner_channel_id TEXT NOT NULL DEFAUTL '',
-	liver_channel_id TEXT NOT NULL DEFAUTL '',
-	badge_type TEXT NOT NULL DEFAUTL '',
-	image_url TEXT NOT NULL DEFAUTL '',
-	label TEXT NOT NULL DEFAUTL '',
+	owner_channel_id TEXT NOT NULL DEFAULT '',
+	liver_channel_id TEXT NOT NULL DEFAULT '',
+	badge_type TEXT NOT NULL DEFAULT '',
+	image_url TEXT NOT NULL DEFAULT '',
+	label TEXT NOT NULL DEFAULT '',
   created_at TIMESTAMPTZ NOT NULL,
   updated_at TIMESTAMPTZ NOT NULL
 );

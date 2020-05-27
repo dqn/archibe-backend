@@ -9,4 +9,4 @@ initdb:
 	go run ./scripts/initdb/main.go ${DSN}
 
 insert:
-	go run ./scripts/insert/main.go ${DSN} ${VIDEO_ID}
+	go run ./scripts/insert/main.go ${DSN} ${CHANNEL_ID} ${VIDEO_ID}

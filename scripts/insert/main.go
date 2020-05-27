@@ -70,12 +70,13 @@ func processEachChatItem(cl *chatlog.Chatlog, handler func(item *chat.ChatItem) 
 }
 
 func run() error {
-	if len(os.Args) != 3 {
+	if len(os.Args) != 4 {
 		os.Exit(1)
 	}
 
 	dsn := os.Args[1]
-	videoID := os.Args[2]
+	channelID := os.Args[2]
+	videoID := os.Args[3]
 
 	cl, err := chatlog.New(videoID)
 	if err != nil {
@@ -113,14 +114,14 @@ func run() error {
 				case "MODERATOR":
 					badges = append(badges, models.Badge{
 						OwnerChannelID: renderer.AuthorExternalChannelID,
-						LiverChannelID: "TODO",
+						LiverChannelID: channelID,
 						BadgeType:      "moderator",
 					})
 
 				default:
 					badges = append(badges, models.Badge{
 						OwnerChannelID: renderer.AuthorExternalChannelID,
-						LiverChannelID: "TODO",
+						LiverChannelID: channelID,
 						BadgeType:      "member",
 						ImageURL:       b.LiveChatAuthorBadgeRenderer.CustomThumbnail.Thumbnails[1].URL,
 						Label:          b.LiveChatAuthorBadgeRenderer.Accessibility.AccessibilityData.Label,
@@ -190,7 +191,7 @@ func run() error {
 
 	_, err = dbx.Videos.InsertOne(&models.Video{
 		VideoID:   videoID,
-		ChannelID: "TODO",
+		ChannelID: channelID,
 	})
 	if err != nil {
 		return err

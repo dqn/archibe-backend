@@ -103,7 +103,7 @@ func run() error {
 
 	fmt.Println("start fetching chats...")
 
-	processEachChatItem(cl, func(item *chat.ChatItem) error {
+	err = processEachChatItem(cl, func(item *chat.ChatItem) error {
 		switch {
 		case item.LiveChatTextMessageRenderer.ID != "":
 			renderer := item.LiveChatTextMessageRenderer
@@ -169,6 +169,9 @@ func run() error {
 
 		return nil
 	})
+	if err != nil {
+		return err
+	}
 
 	fmt.Println("start inserting to database...")
 
@@ -176,6 +179,7 @@ func run() error {
 	if err != nil {
 		return err
 	}
+	defer db.Close()
 	dbx := dbexec.NewExecutor(db)
 
 	_, err = dbx.Videos.InsertOne(&models.Video{

@@ -34,6 +34,7 @@ CREATE TABLE chats (
 
 DROP TABLE IF EXISTS badges CASCADE;
 CREATE TABLE badges (
+  id BIGSERIAL NOT NULL PRIMARY KEY,
 	owner_channel_id TEXT NOT NULL DEFAULT '',
 	liver_channel_id TEXT NOT NULL DEFAULT '',
 	badge_type TEXT NOT NULL DEFAULT '',

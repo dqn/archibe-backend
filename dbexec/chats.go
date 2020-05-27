@@ -36,7 +36,7 @@ func (e *ChatsExecutor) InsertMany(chats []models.Chat) (sql.Result, error) {
 		COALESCE(created_at, NOW()),
 		COALESCE(updated_at, NOW())
 	FROM
-    jsonb_to_recordset($1) AS x(
+		jsonb_to_recordset($1) AS x(
 			author_channel_id TEXT,
 			video_id TEXT,
 			timestamp TEXT,

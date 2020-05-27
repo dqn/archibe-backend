@@ -28,7 +28,7 @@ func (e *ChannelsExecutor) InsertMany(channels []models.Channel) (sql.Result, er
 		COALESCE(created_at, NOW()),
 		COALESCE(updated_at, NOW())
 	FROM
-    jsonb_to_recordset($1) AS x(
+		jsonb_to_recordset($1) AS x(
 			channel_id TEXT,
 			name TEXT,
 			image_url TEXT,

@@ -32,7 +32,7 @@ func (e *BadgesExecutor) InsertMany(badges []models.Badge) (sql.Result, error) {
 		COALESCE(created_at, NOW()),
 		COALESCE(updated_at, NOW())
 	FROM
-    jsonb_to_recordset($1) AS x(
+		jsonb_to_recordset($1) AS x(
 			owner_channel_id TEXT,
 			liver_channel_id TEXT,
 			badge_type TEXT,

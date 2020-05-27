@@ -102,8 +102,11 @@ func run() error {
 			}
 
 			for _, b := range renderer.AuthorBadges {
-				switch {
-				case b.LiveChatAuthorBadgeRenderer.Icon.IconType == "MODERATOR":
+				switch b.LiveChatAuthorBadgeRenderer.Icon.IconType {
+				case "OWNER":
+					// do nothing
+
+				case "MODERATOR":
 					badges = append(badges, models.Badge{
 						OwnerChannelID: renderer.AuthorExternalChannelID,
 						LiverChannelID: "TODO",

@@ -3,11 +3,11 @@ package models
 import "time"
 
 type Badge struct {
-	OwnerChannelID string    `json:"owner_channel_id"`
-	LiverChannelID string    `json:"liver_channel_id"`
-	BadgeType      string    `json:"badge_type"`
-	ImageURL       string    `json:"image_url"`
-	Label          string    `json:"label"`
-	CreatedAt      time.Time `json:"created_at"`
-	UpdatedAt      time.Time `json:"updated_at"`
+	OwnerChannelID string    `db:"owner_channel_id" json:"owner_channel_id"`
+	LiverChannelID string    `db:"liver_channel_id" json:"liver_channel_id"`
+	BadgeType      string    `db:"badge_type" json:"badge_type"`
+	ImageURL       string    `db:"image_url" json:"image_url"`
+	Label          string    `db:"label" json:"label"`
+	CreatedAt      time.Time `db:"created_at" json:"created_at"`
+	UpdatedAt      time.Time `db:"updated_at" json:"updated_at"`
 }

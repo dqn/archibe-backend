@@ -29,8 +29,13 @@ func run() error {
 	if err != nil {
 		return err
 	}
-
 	fmt.Printf("%#v\n", channel)
+
+	badges, err := dbx.Badges.FindByChannelID(channelID)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("%#v\n", badges)
 
 	return nil
 }

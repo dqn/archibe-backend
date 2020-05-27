@@ -11,20 +11,13 @@ type Chat struct {
 	MessageElements []MessageElement `db:"message_elements" json:"message_elements"`
 	PurchaseAmount  float64          `db:"purchase_amount" json:"purchase_amount"`
 	CurrencyUnit    string           `db:"currency_unit" json:"currency_unit"`
-	IsModerator     bool             `db:"is_moderator" json:"is_moderator"`
-	Badge           *Badge           `db:"badge" json:"badge"`
 	CreatedAt       *time.Time       `db:"created_at" json:"created_at"`
 	UpdatedAt       *time.Time       `db:"updated_at" json:"updated_at"`
 }
 
 type MessageElement struct {
-	Type  string `json:"type"`
-	Text  string `json:"text"`
-	Label string `json:"label"`
-	URL   string `json:"url"`
-}
-
-type Badge struct {
-	Label string `json:"label"`
-	URL   string `json:"url"`
+	Type     string `json:"type"`
+	Text     string `json:"text"`
+	ImageURL string `json:"image_url"`
+	Label    string `json:"label"`
 }

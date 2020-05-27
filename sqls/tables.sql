@@ -27,8 +27,17 @@ CREATE TABLE chats (
   message_elements JSONB NOT NULL DEFAULT '[]',
   purchase_amount NUMERIC DEFAULT 0.0,
   currency_unit TEXT NOT NULL DEFAULT '',
-  is_moderator BOOLEAN NOT NULL DEFAULT FALSE,
-  badge JSONB NOT NULL DEFAULT '{}',
+  created_at TIMESTAMPTZ NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL
+);
+
+DROP TABLE IF EXISTS badges CASCADE;
+CREATE TABLE badges (
+	owner_channel_id TEXT NOT NULL DEFAUTL '',
+	liver_channel_id TEXT NOT NULL DEFAUTL '',
+	badge_type TEXT NOT NULL DEFAUTL '',
+	image_url TEXT NOT NULL DEFAUTL '',
+	label TEXT NOT NULL DEFAUTL '',
   created_at TIMESTAMPTZ NOT NULL,
   updated_at TIMESTAMPTZ NOT NULL
 );

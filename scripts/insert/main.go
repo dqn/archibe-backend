@@ -30,8 +30,8 @@ func parseMessage(message *chat.Message) ([]models.MessageElement, error) {
 		switch {
 		case v.Emoji.EmojiID != "":
 			m.Type = "emoji"
+			m.ImageURL = v.Emoji.Image.Thumbnails[1].URL
 			m.Label = v.Emoji.Image.Accessibility.AccessibilityData.Label
-			m.URL = v.Emoji.Image.Thumbnails[1].URL
 		case v.Text != "":
 			m.Type = "text"
 			m.Text = v.Text
@@ -44,25 +44,6 @@ func parseMessage(message *chat.Message) ([]models.MessageElement, error) {
 	}
 
 	return me, nil
-}
-
-func parseAuthorBadges(badges []chat.AuthorBadge) (bool, *models.Badge) {
-	var (
-		isModerator bool
-		badge       *models.Badge
-	)
-	for _, b := range badges {
-		if b.LiveChatAuthorBadgeRenderer.Icon.IconType == "MODERATOR" {
-			isModerator = true
-			continue
-		}
-		badge = &models.Badge{
-			Label: b.LiveChatAuthorBadgeRenderer.Accessibility.AccessibilityData.Label,
-			URL:   b.LiveChatAuthorBadgeRenderer.CustomThumbnail.Thumbnails[1].URL,
-		}
-	}
-
-	return isModerator, badge
 }
 
 func processEachChatItem(cl *chatlog.Chatlog, handler func(item *chat.ChatItem) error) error {
@@ -97,9 +78,11 @@ func run() error {
 		return err
 	}
 
-	channelsMemo := make(map[string]struct{}, 1024)
-	channels := make([]models.Channel, 0, 1024)
-	chats := make([]models.Chat, 0, 1024)
+	bufsize := 1024
+	channelsMemo := make(map[string]struct{}, bufsize)
+	channels := make([]models.Channel, 0, bufsize)
+	chats := make([]models.Chat, 0, bufsize)
+	badges := make([]models.Badge, 0, bufsize)
 
 	fmt.Println("start fetching chats...")
 
@@ -122,16 +105,32 @@ func run() error {
 				return err
 			}
 
-			isModerator, badge := parseAuthorBadges(renderer.AuthorBadges)
+			for _, b := range renderer.AuthorBadges {
+				switch {
+				case b.LiveChatAuthorBadgeRenderer.Icon.IconType == "MODERATOR":
+					badges = append(badges, models.Badge{
+						OwnerChannelID: renderer.AuthorExternalChannelID,
+						LiverChannelID: "TODO",
+						BadgeType:      "moderator",
+					})
+
+				default:
+					badges = append(badges, models.Badge{
+						OwnerChannelID: renderer.AuthorExternalChannelID,
+						LiverChannelID: "TODO",
+						BadgeType:      "member",
+						ImageURL:       b.LiveChatAuthorBadgeRenderer.CustomThumbnail.Thumbnails[1].URL,
+						Label:          b.LiveChatAuthorBadgeRenderer.Accessibility.AccessibilityData.Label,
+					})
+				}
+			}
 
 			chats = append(chats, models.Chat{
-				ChannelID:       renderer.AuthorExternalChannelID,
+				AuthorChannelID: renderer.AuthorExternalChannelID,
 				VideoID:         videoID,
 				Timestamp:       renderer.TimestampText.SimpleText,
 				TimestampUsec:   renderer.TimestampUsec,
 				MessageElements: me,
-				IsModerator:     isModerator,
-				Badge:           badge,
 			})
 
 		case item.LiveChatPaidMessageRenderer.ID != "":
@@ -157,7 +156,7 @@ func run() error {
 			}
 
 			chats = append(chats, models.Chat{
-				ChannelID:       renderer.AuthorExternalChannelID,
+				AuthorChannelID: renderer.AuthorExternalChannelID,
 				VideoID:         videoID,
 				Timestamp:       renderer.TimestampText.SimpleText,
 				TimestampUsec:   renderer.TimestampUsec,

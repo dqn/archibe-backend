@@ -79,7 +79,6 @@ func run() error {
 	}
 
 	bufsize := 1024
-	channelsMemo := make(map[string]struct{}, bufsize)
 	channels := make([]models.Channel, 0, bufsize)
 	chats := make([]models.Chat, 0, bufsize)
 	badges := make([]models.Badge, 0, bufsize)
@@ -91,14 +90,11 @@ func run() error {
 		case item.LiveChatTextMessageRenderer.ID != "":
 			renderer := item.LiveChatTextMessageRenderer
 
-			if _, ok := channelsMemo[renderer.AuthorExternalChannelID]; !ok {
-				channels = append(channels, models.Channel{
-					ChannelID: renderer.AuthorExternalChannelID,
-					Name:      renderer.AuthorName.SimpleText,
-					ImageURL:  renderer.AuthorPhoto.Thumbnails[1].URL,
-				})
-				channelsMemo[renderer.AuthorExternalChannelID] = struct{}{}
-			}
+			channels = append(channels, models.Channel{
+				ChannelID: renderer.AuthorExternalChannelID,
+				Name:      renderer.AuthorName.SimpleText,
+				ImageURL:  renderer.AuthorPhoto.Thumbnails[1].URL,
+			})
 
 			me, err := parseMessage(&renderer.Message)
 			if err != nil {
@@ -136,14 +132,11 @@ func run() error {
 		case item.LiveChatPaidMessageRenderer.ID != "":
 			renderer := item.LiveChatPaidMessageRenderer
 
-			if _, ok := channelsMemo[renderer.AuthorExternalChannelID]; !ok {
-				channels = append(channels, models.Channel{
-					ChannelID: renderer.AuthorExternalChannelID,
-					Name:      renderer.AuthorName.SimpleText,
-					ImageURL:  renderer.AuthorPhoto.Thumbnails[1].URL,
-				})
-				channelsMemo[renderer.AuthorExternalChannelID] = struct{}{}
-			}
+			channels = append(channels, models.Channel{
+				ChannelID: renderer.AuthorExternalChannelID,
+				Name:      renderer.AuthorName.SimpleText,
+				ImageURL:  renderer.AuthorPhoto.Thumbnails[1].URL,
+			})
 
 			me, err := parseMessage(&renderer.Message)
 			if err != nil {
@@ -195,6 +188,11 @@ func run() error {
 	}
 
 	_, err = dbx.Chats.InsertMany(chats)
+	if err != nil {
+		return err
+	}
+
+	_, err = dbx.Badges.InsertMany(badges)
 	if err != nil {
 		return err
 	}

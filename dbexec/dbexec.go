@@ -13,6 +13,7 @@ type DBExecutor struct {
 	Channels *ChannelsExecutor
 	Videos   *VideosExecutor
 	Chats    *ChatsExecutor
+	Badges   *BadgesExecutor
 }
 
 func NewExecutor(db *sqlx.DB) *DBExecutor {
@@ -21,6 +22,7 @@ func NewExecutor(db *sqlx.DB) *DBExecutor {
 		Channels: &ChannelsExecutor{db},
 		Videos:   &VideosExecutor{db},
 		Chats:    &ChatsExecutor{db},
+		Badges:   &BadgesExecutor{db},
 	}
 }
 
@@ -37,7 +39,7 @@ func (e *ChannelsExecutor) InsertMany(channels []models.Channel) (sql.Result, er
 		created_at,
 		updated_at
 	)
-	SELECT
+	SELECT DISTINCT
 		channel_id,
 		name,
 		image_url,
@@ -96,7 +98,7 @@ type ChatsExecutor struct {
 func (e *ChatsExecutor) InsertMany(chats []models.Chat) (sql.Result, error) {
 	sql := `
 	INSERT INTO chats (
-		channel_id,
+		author_channel_id,
 		video_id,
 		timestamp,
 		timestamp_usec,
@@ -106,14 +108,14 @@ func (e *ChatsExecutor) InsertMany(chats []models.Chat) (sql.Result, error) {
 		created_at,
 		updated_at
 	)
-	SELECT
+	SELECT DISTINCT
 		author_channel_id,
 		video_id,
 		timestamp,
 		timestamp_usec,
 		message_elements,
-		COALESCE(purchase_amount, 0.0),
-		COALESCE(currency_unit, ''),
+		purchase_amount,
+		currency_unit,
 		COALESCE(created_at, NOW()),
 		COALESCE(updated_at, NOW())
 	FROM
@@ -132,6 +134,56 @@ func (e *ChatsExecutor) InsertMany(chats []models.Chat) (sql.Result, error) {
 	`
 
 	b, err := json.Marshal(chats)
+	if err != nil {
+		return nil, err
+	}
+
+	return e.DB.Exec(sql, string(b))
+}
+
+type BadgesExecutor struct {
+	DB *sqlx.DB
+}
+
+func (e *BadgesExecutor) InsertMany(badges []models.Badge) (sql.Result, error) {
+	sql := `
+	INSERT INTO badges (
+		owner_channel_id,
+		liver_channel_id,
+		badge_type,
+		image_url,
+		label,
+		created_at,
+		updated_at
+	)
+	SELECT DISTINCT
+		owner_channel_id,
+		liver_channel_id,
+		badge_type,
+		image_url,
+		label,
+		COALESCE(created_at, NOW()),
+		COALESCE(updated_at, NOW())
+	FROM
+    jsonb_to_recordset($1) AS x(
+			owner_channel_id TEXT,
+			liver_channel_id TEXT,
+			badge_type TEXT,
+			image_url TEXT,
+			label TEXT,
+			created_at TIMESTAMPTZ,
+			updated_at TIMESTAMPTZ
+		)
+	ON CONFLICT (owner_channel_id, liver_channel_id, badge_type) DO UPDATE SET
+		owner_channel_id = EXCLUDED.owner_channel_id,
+		liver_channel_id = EXCLUDED.liver_channel_id,
+		badge_type = EXCLUDED.badge_type,
+		image_url = EXCLUDED.image_url,
+		label = EXCLUDED.label,
+		updated_at = EXCLUDED.updated_at
+	`
+
+	b, err := json.Marshal(badges)
 	if err != nil {
 		return nil, err
 	}

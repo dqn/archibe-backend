@@ -49,3 +49,29 @@ func (e *ChannelsExecutor) InsertMany(channels []models.Channel) (sql.Result, er
 
 	return e.db.Exec(sql, string(b))
 }
+
+func (e *ChannelsExecutor) Find(channelID string) (*models.Channel, error) {
+	sql := `
+	SELECT
+		id,
+		channel_id,
+		name,
+		image_url,
+		(SELECT COUNT(*) FROM chats WHERE author_channel_id = $1) AS sent_chat_count,
+		(SELECT COUNT(*) FROM chats AS t1 INNER JOIN videos AS t2 ON t1.video_id = t2.video_id WHERE t2.channel_id = $1) AS received_chat_count,
+		created_at,
+		updated_at
+	FROM
+		channels
+	WHERE
+		channel_id = $1
+	`
+
+	var channel models.Channel
+	err := e.db.Get(&channel, sql, channelID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &channel, nil
+}

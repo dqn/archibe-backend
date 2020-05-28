@@ -1,7 +1,6 @@
 package dbexec
 
 import (
-	"fmt"
 	"os"
 	"testing"
 
@@ -47,5 +46,7 @@ func TestBadgesFindByChannelID(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	fmt.Printf("%#v\n", badges)
+	if len(badges) != 2 {
+		t.Fatal("number of retrieved badges do not match")
+	}
 }

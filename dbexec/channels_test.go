@@ -1,7 +1,6 @@
 package dbexec
 
 import (
-	"fmt"
 	"os"
 	"testing"
 
@@ -45,5 +44,7 @@ func TestChannelsFind(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	fmt.Printf("%#v\n", channel)
+	if channel.Name != "A channel" {
+		t.Fatal("the name of the retrieved channel does not match")
+	}
 }

@@ -14,8 +14,20 @@ $ make startdb
 $ make initdb
 ```
 
-### Insert data
+### Fetch chat data
 
 ```bash
 $ CHANNEL_ID=<channel-id> VIDEO_ID=<video-id> make insert
+```
+
+### Insert test data
+
+```bash
+$ make testdata
+```
+
+### Test
+
+```bash
+$ make test
 ```

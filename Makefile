@@ -10,3 +10,9 @@ initdb:
 
 insert:
 	go run ./scripts/insert/main.go ${DSN} ${CHANNEL_ID} ${VIDEO_ID}
+
+testdata:
+	go run ./scripts/testdata/main.go ${DSN}
+
+test:
+	DSN=${DSN} go test -v ./...

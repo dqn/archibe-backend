@@ -21,7 +21,7 @@ func (e *ChannelsExecutor) InsertMany(channels []models.Channel) (sql.Result, er
 		created_at,
 		updated_at
 	)
-	SELECT DISTINCT
+	SELECT
 		channel_id,
 		name,
 		image_url,

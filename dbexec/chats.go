@@ -26,7 +26,7 @@ func (e *ChatsExecutor) InsertMany(chats []models.Chat) (sql.Result, error) {
 		created_at,
 		updated_at
 	)
-	SELECT DISTINCT
+	SELECT
 		author_channel_id,
 		video_id,
 		timestamp,

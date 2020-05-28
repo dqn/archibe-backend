@@ -23,7 +23,7 @@ func (e *BadgesExecutor) InsertMany(badges []models.Badge) (sql.Result, error) {
 		created_at,
 		updated_at
 	)
-	SELECT DISTINCT
+	SELECT
 		owner_channel_id,
 		liver_channel_id,
 		badge_type,

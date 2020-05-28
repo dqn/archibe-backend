@@ -2,7 +2,7 @@
 
 ## Development
 
-### Start database locally using Docker.
+### Start database
 
 ```bash
 $ make startdb
@@ -18,12 +18,6 @@ $ make initdb
 
 ```bash
 $ CHANNEL_ID=<channel-id> VIDEO_ID=<video-id> make insert
-```
-
-### Insert test data
-
-```bash
-$ make testdata
 ```
 
 ### Test

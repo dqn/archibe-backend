@@ -10,10 +10,8 @@ import (
 	_ "github.com/lib/pq"
 )
 
-const sqlsPath = "./sqls"
-
-func getSQL(name string) (sql string, err error) {
-	f, err := os.Open(path.Join(sqlsPath, name+".sql"))
+func readFile(path string) (sql string, err error) {
+	f, err := os.Open(path)
 	if err != nil {
 		return
 	}
@@ -30,7 +28,7 @@ func getSQL(name string) (sql string, err error) {
 
 func run() error {
 	if len(os.Args) != 2 {
-		os.Exit(1)
+		return fmt.Errorf("invalid arguments")
 	}
 
 	dsn := os.Args[1]
@@ -41,14 +39,15 @@ func run() error {
 	}
 
 	names := []string{
-		"schemas",
-		"tables",
-		"indexes",
+		"schemas.sql",
+		"tables.sql",
+		"indexes.sql",
 	}
 
 	var sql string
-	for _, v := range names {
-		s, err := getSQL(v)
+	for _, name := range names {
+		path := path.Join("sqls", name)
+		s, err := readFile(path)
 		if err != nil {
 			return err
 		}

@@ -75,7 +75,7 @@ func processEachChatItem(cl *chatlog.Chatlog, handler func(item *chat.ChatItem) 
 
 func run() error {
 	if len(os.Args) != 4 {
-		os.Exit(1)
+		return fmt.Errorf("invalid arguments")
 	}
 
 	dsn := os.Args[1]

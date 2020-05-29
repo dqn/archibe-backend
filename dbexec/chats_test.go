@@ -52,8 +52,14 @@ func TestChatsFindByQuery(t *testing.T) {
 		t.Fatal(err)
 	}
 	ex := ChatsExecutor{db}
-	_, err = ex.FindByQuery()
+	chats, err := ex.FindByQuery(&ChatsQuery{
+		Q:    "hell*",
+		From: "CHANNEL_A",
+	})
 	if err != nil {
 		t.Fatal(err)
+	}
+	if len(chats) != 1 {
+		t.Fatal("number of retrieved chats do not match")
 	}
 }

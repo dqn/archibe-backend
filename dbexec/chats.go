@@ -64,7 +64,12 @@ func (e *ChatsExecutor) InsertMany(chats []models.Chat) (sql.Result, error) {
 	return e.db.Exec(sql, string(b))
 }
 
-func (e *ChatsExecutor) FindByQuery() ([]models.Chat, error) {
+type ChatsQuery struct {
+	Q    string
+	From string
+}
+
+func (e *ChatsExecutor) FindByQuery(query *ChatsQuery) ([]models.Chat, error) {
 	sql := `
 	SELECT
 		t1.author_channel_id,
@@ -83,12 +88,20 @@ func (e *ChatsExecutor) FindByQuery() ([]models.Chat, error) {
 		INNER JOIN channels AS t2 ON (
 			t1.author_channel_id = t2.channel_id
 		)
+	WHERE
+		(
+			$1 = ''
+			OR EXISTS (SELECT 1 FROM jsonb_to_recordset(t1.message_elements) as x(text TEXT) WHERE text IS NOT NULL AND text ~ $1)
+		) AND (
+			$2 = ''
+			OR t1.author_channel_id = $2
+		)
 	ORDER BY
 		created_at DESC
 	`
 
 	chats := []models.Chat{}
-	if err := e.db.Select(&chats, sql); err != nil {
+	if err := e.db.Select(&chats, sql, query.Q, query.From); err != nil {
 		return nil, err
 	}
 

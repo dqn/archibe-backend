@@ -82,11 +82,26 @@ func (e *ChatsExecutor) FindByQuery(query *ChatsQuery) ([]models.Chat, error) {
 		t1.super_chat_context,
 		t1.created_at,
 		t2.name AS "channel.name",
-		t2.image_url AS "channel.image_url"
+		t2.image_url AS "channel.image_url",
+		jsonb_agg(jsonb_build_object(
+			'badge_type',
+			t4.badge_type,
+			'image_url',
+			t4.image_url,
+			'label',
+			t4.label
+		)) AS "badges"
 	FROM
 		chats AS t1
 		INNER JOIN channels AS t2 ON (
 			t1.author_channel_id = t2.channel_id
+		)
+		INNER JOIN videos AS t3 ON (
+			t1.video_id = t3.video_id
+		)
+		INNER JOIN badges AS t4 ON (
+			t1.author_channel_id = t4.owner_channel_id
+			AND t3.channel_id = t4.liver_channel_id
 		)
 	WHERE
 		(
@@ -96,6 +111,18 @@ func (e *ChatsExecutor) FindByQuery(query *ChatsQuery) ([]models.Chat, error) {
 			$2 = ''
 			OR t1.author_channel_id = $2
 		)
+	GROUP BY
+		t1.author_channel_id,
+		t1.video_id,
+		t1.timestamp,
+		t1.timestamp_usec,
+		t1.message_elements,
+		t1.purchase_amount,
+		t1.currency_unit,
+		t1.super_chat_context,
+		t1.created_at,
+		t2.name,
+		t2.image_url
 	ORDER BY
 		created_at DESC
 	`

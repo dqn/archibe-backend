@@ -12,3 +12,9 @@ type Badge struct {
 	CreatedAt      *time.Time `db:"created_at" json:"created_at"`
 	UpdatedAt      *time.Time `db:"updated_at" json:"updated_at"`
 }
+
+type Badges []Badge
+
+func (m *Badges) Scan(val interface{}) error {
+	return scanJSON(m, val)
+}

@@ -18,7 +18,7 @@ type Chat struct {
 	CreatedAt        *time.Time        `db:"created_at" json:"created_at"`
 	UpdatedAt        *time.Time        `db:"updated_at" json:"updated_at"`
 	Channel          *Channel          `db:"channel" json:"channel,omitempty"`
-	Badges           []Badge           `db:"badges" json:"badges,omitempty"`
+	Badges           Badges            `db:"badges" json:"badges,omitempty"`
 }
 
 type MessageElement struct {

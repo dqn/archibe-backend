@@ -49,7 +49,7 @@ INSERT INTO chats (
   updated_at
 ) VALUES (
   'CHANNEL_A',
-  'VIDEO_A',
+  'VIDEO_B',
   'chat',
   '12:34',
   '1234567890123456',
@@ -61,7 +61,7 @@ INSERT INTO chats (
   NOW()
 ), (
   'CHANNEL_B',
-  'VIDEO_B',
+  'VIDEO_A',
   'super_chat',
   '43:21',
   '1234567890123456',

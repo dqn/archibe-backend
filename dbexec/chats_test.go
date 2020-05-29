@@ -43,3 +43,17 @@ func TestChatsInsertMany(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestChatsFindByQuery(t *testing.T) {
+	dsn := os.Getenv("DSN")
+
+	db, err := sqlx.Open("postgres", dsn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ex := ChatsExecutor{db}
+	_, err = ex.FindByQuery()
+	if err != nil {
+		t.Fatal(err)
+	}
+}

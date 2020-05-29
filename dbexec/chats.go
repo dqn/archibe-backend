@@ -63,3 +63,34 @@ func (e *ChatsExecutor) InsertMany(chats []models.Chat) (sql.Result, error) {
 
 	return e.db.Exec(sql, string(b))
 }
+
+func (e *ChatsExecutor) FindByQuery() ([]models.Chat, error) {
+	sql := `
+	SELECT
+		t1.author_channel_id,
+		t1.video_id,
+		t1.timestamp,
+		t1.timestamp_usec,
+		t1.message_elements,
+		t1.purchase_amount,
+		t1.currency_unit,
+		t1.super_chat_context,
+		t1.created_at,
+		t2.name AS "channel.name",
+		t2.image_url AS "channel.image_url"
+	FROM
+		chats AS t1
+		INNER JOIN channels AS t2 ON (
+			t1.author_channel_id = t2.channel_id
+		)
+	ORDER BY
+		created_at DESC
+	`
+
+	chats := []models.Chat{}
+	if err := e.db.Select(&chats, sql); err != nil {
+		return nil, err
+	}
+
+	return chats, nil
+}

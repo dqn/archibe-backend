@@ -6,6 +6,7 @@ type Chat struct {
 	ID               int64             `db:"id" json:"id"`
 	AuthorChannelID  string            `db:"channel_id" json:"author_channel_id"`
 	VideoID          string            `db:"video_id" json:"video_id"`
+	Type             string            `db:"type" json:"type"`
 	Timestamp        string            `db:"timestamp" json:"timestamp"`
 	TimestampUsec    string            `db:"timestamp_usec" json:"timestamp_usec"`
 	MessageElements  []MessageElement  `db:"message_elements" json:"message_elements"`

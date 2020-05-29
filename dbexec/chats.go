@@ -17,6 +17,7 @@ func (e *ChatsExecutor) InsertMany(chats []models.Chat) (sql.Result, error) {
 	INSERT INTO chats (
 		author_channel_id,
 		video_id,
+		type,
 		timestamp,
 		timestamp_usec,
 		message_elements,
@@ -29,6 +30,7 @@ func (e *ChatsExecutor) InsertMany(chats []models.Chat) (sql.Result, error) {
 	SELECT
 		author_channel_id,
 		video_id,
+		type,
 		timestamp,
 		timestamp_usec,
 		message_elements,
@@ -41,6 +43,7 @@ func (e *ChatsExecutor) InsertMany(chats []models.Chat) (sql.Result, error) {
 		jsonb_to_recordset($1) AS x(
 			author_channel_id TEXT,
 			video_id TEXT,
+			type TEXT,
 			timestamp TEXT,
 			timestamp_usec TEXT,
 			message_elements JSONB,

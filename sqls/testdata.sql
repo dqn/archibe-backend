@@ -38,6 +38,7 @@ INSERT INTO videos (
 INSERT INTO chats (
   author_channel_id,
   video_id,
+  type,
   timestamp,
   timestamp_usec,
   message_elements,
@@ -49,6 +50,7 @@ INSERT INTO chats (
 ) VALUES (
   'CHANNEL_A',
   'VIDEO_A',
+  'chat',
   '12:34',
   '1234567890123456',
   '[{"type":"text","text":"hello"}]',
@@ -60,6 +62,7 @@ INSERT INTO chats (
 ), (
   'CHANNEL_B',
   'VIDEO_B',
+  'super_chat',
   '43:21',
   '1234567890123456',
   '[{"type":"text","text":"hello"},{"type":"emoji","image_url":"https://placehold.jp/64x64.png?text=dummy","label":":dummy:"}]',

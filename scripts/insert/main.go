@@ -145,6 +145,7 @@ func run() error {
 			chats = append(chats, models.Chat{
 				AuthorChannelID: renderer.AuthorExternalChannelID,
 				VideoID:         videoID,
+				Type:            "chat",
 				Timestamp:       renderer.TimestampText.SimpleText,
 				TimestampUsec:   renderer.TimestampUsec,
 				MessageElements: me,
@@ -175,6 +176,7 @@ func run() error {
 			chats = append(chats, models.Chat{
 				AuthorChannelID: renderer.AuthorExternalChannelID,
 				VideoID:         videoID,
+				Type:            "super_chat",
 				Timestamp:       renderer.TimestampText.SimpleText,
 				TimestampUsec:   renderer.TimestampUsec,
 				MessageElements: me,

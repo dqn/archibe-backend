@@ -22,6 +22,7 @@ CREATE TABLE chats (
   id BIGSERIAL NOT NULL PRIMARY KEY,
   author_channel_id TEXT NOT NULL DEFAULT '',
   video_id TEXT NOT NULL DEFAULT '',
+  type TEXT NOT NULL DEFAULT '',
   timestamp TEXT NOT NULL DEFAULT '',
   timestamp_usec TEXT NOT NULL DEFAULT '',
   message_elements JSONB NOT NULL DEFAULT '[]',

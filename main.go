@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/k0kubun/pp"
 	_ "github.com/lib/pq"
 )
 
@@ -21,6 +22,8 @@ func run() error {
 	// }
 	// defer db.Close()
 	// dbx := dbexec.NewExecutor(db)
+
+	pp.Print()
 
 	return nil
 }

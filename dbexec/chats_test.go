@@ -53,8 +53,9 @@ func TestChatsFindByQuery(t *testing.T) {
 	}
 	ex := ChatsExecutor{db}
 	chats, err := ex.FindByQuery(&ChatsQuery{
-		Q:    "hell*",
-		From: "CHANNEL_A",
+		Q:       "hell*",
+		CHANNEL: "CHANNEL_A",
+		VIDEO:   "VIDEO_B",
 	})
 	if err != nil {
 		t.Fatal(err)

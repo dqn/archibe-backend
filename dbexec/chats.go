@@ -65,8 +65,9 @@ func (e *ChatsExecutor) InsertMany(chats []models.Chat) (sql.Result, error) {
 }
 
 type ChatsQuery struct {
-	Q    string
-	From string
+	Q       string
+	CHANNEL string
+	VIDEO   string
 }
 
 func (e *ChatsExecutor) FindByQuery(query *ChatsQuery) ([]models.Chat, error) {
@@ -110,6 +111,9 @@ func (e *ChatsExecutor) FindByQuery(query *ChatsQuery) ([]models.Chat, error) {
 		) AND (
 			$2 = ''
 			OR t1.author_channel_id = $2
+		) AND (
+			$3 = ''
+			OR t1.video_id = $3
 		)
 	GROUP BY
 		t1.author_channel_id,
@@ -128,7 +132,7 @@ func (e *ChatsExecutor) FindByQuery(query *ChatsQuery) ([]models.Chat, error) {
 	`
 
 	chats := []models.Chat{}
-	if err := e.db.Select(&chats, sql, query.Q, query.From); err != nil {
+	if err := e.db.Select(&chats, sql, query.Q, query.CHANNEL, query.VIDEO); err != nil {
 		return nil, err
 	}
 

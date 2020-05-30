@@ -52,18 +52,31 @@ func (e *ChannelsExecutor) InsertMany(channels []models.Channel) (sql.Result, er
 func (e *ChannelsExecutor) Find(channelID string) (*models.Channel, error) {
 	sql := `
 	SELECT
-		id,
-		channel_id,
-		name,
-		image_url,
+		t1.id,
+		t1.channel_id,
+		t1.name,
+		t1.image_url,
 		(SELECT COUNT(*) FROM chats WHERE author_channel_id = $1) AS sent_chat_count,
-		(SELECT COUNT(*) FROM chats AS t1 INNER JOIN videos AS t2 ON t1.video_id = t2.video_id WHERE t2.channel_id = $1) AS received_chat_count,
-		created_at,
-		updated_at
+		(SELECT COUNT(*) FROM chats INNER JOIN videos ON chats.video_id = videos.video_id WHERE videos.channel_id = $1) AS received_chat_count,
+		t1.created_at,
+		t1.updated_at,
+		jsonb_agg(jsonb_build_object(
+			'badge_type',
+			t2.badge_type,
+			'image_url',
+			t2.image_url,
+			'label',
+			t2.label
+		)) AS badges
 	FROM
-		channels
+		channels AS t1
+		INNER JOIN badges AS t2 ON (
+			t1.channel_id = t2.owner_channel_id
+		)
 	WHERE
 		channel_id = $1
+	GROUP BY
+		t1.id
 	`
 
 	var channel models.Channel

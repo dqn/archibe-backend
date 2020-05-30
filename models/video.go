@@ -9,3 +9,9 @@ type Video struct {
 	CreatedAt *time.Time `db:"created_at" json:"created_at"`
 	UpdatedAt *time.Time `db:"updated_at" json:"updated_at"`
 }
+
+type Videos []Video
+
+func (v *Videos) Scan(val interface{}) error {
+	return scanJSON(v, val)
+}

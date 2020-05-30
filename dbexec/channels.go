@@ -56,25 +56,32 @@ func (e *ChannelsExecutor) Find(channelID string) (*models.Channel, error) {
 		t1.channel_id,
 		t1.name,
 		t1.image_url,
-		(SELECT COUNT(*) FROM chats WHERE author_channel_id = $1) AS sent_chat_count,
+		(SELECT COUNT(*) FROM chats WHERE chats.author_channel_id = $1) AS sent_chat_count,
 		(SELECT COUNT(*) FROM chats INNER JOIN videos ON chats.video_id = videos.video_id WHERE videos.channel_id = $1) AS received_chat_count,
 		t1.created_at,
 		t1.updated_at,
-		jsonb_agg(jsonb_build_object(
+		jsonb_agg(DISTINCT jsonb_build_object(
 			'badge_type',
 			t2.badge_type,
 			'image_url',
 			t2.image_url,
 			'label',
 			t2.label
-		)) AS badges
+		)) AS badges,
+		jsonb_agg(DISTINCT jsonb_build_object(
+			'video_id',
+			t3.video_id
+		)) AS videos
 	FROM
 		channels AS t1
 		INNER JOIN badges AS t2 ON (
 			t1.channel_id = t2.owner_channel_id
 		)
+		INNER JOIN videos AS t3 ON (
+			t1.channel_id = t3.channel_id
+		)
 	WHERE
-		channel_id = $1
+		t1.channel_id = $1
 	GROUP BY
 		t1.id
 	`

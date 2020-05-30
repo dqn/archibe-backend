@@ -84,7 +84,7 @@ func (e *ChatsExecutor) FindByQuery(query *ChatsQuery) ([]models.Chat, error) {
 		t1.created_at,
 		t2.name AS "channel.name",
 		t2.image_url AS "channel.image_url",
-		jsonb_agg(jsonb_build_object(
+		jsonb_agg(DISTINCT jsonb_build_object(
 			'badge_type',
 			t4.badge_type,
 			'image_url',

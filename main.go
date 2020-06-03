@@ -4,7 +4,11 @@ import (
 	"log"
 	"os"
 
+	"github.com/dqn/tubekids/app"
+	"github.com/dqn/tubekids/dbexec"
+	"github.com/jmoiron/sqlx"
 	"github.com/k0kubun/pp"
+	"github.com/labstack/echo/v4"
 	_ "github.com/lib/pq"
 )
 
@@ -13,16 +17,20 @@ func run() error {
 		os.Exit(1)
 	}
 
-	// dns := os.Args[1]
-	// channelID := os.Args[2]
+	address := os.Args[1]
+	dns := os.Args[2]
 
-	// db, err := sqlx.Open("postgres", dns)
-	// if err != nil {
-	// 	return err
-	// }
-	// defer db.Close()
-	// dbx := dbexec.NewExecutor(db)
+	db, err := sqlx.Open("postgres", dns)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+	dbx := dbexec.NewExecutor(db)
 
+	e := echo.New()
+
+	a := app.App{DBX: dbx, Server: e}
+	a.Start(address)
 	pp.Print()
 
 	return nil

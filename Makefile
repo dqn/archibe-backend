@@ -1,9 +1,13 @@
-.PHONY: startdb initdb insert test
+.PHONY: serve startdb stopdb initdb insert test
 
 DSN_DEVELOPMENT="user=admin password=admin database=tubekids sslmode=disable"
 DSN_TEST="user=admin password=admin database=tubekids-test port=5433 sslmode=disable"
 
 DSN=${DSN_DEVELOPMENT}
+ADDRESS=:3000
+
+serve:
+	go run main.go ${ADDRESS} ${DSN}
 
 startdb:
 	docker run --rm --name tubekids -e POSTGRES_DB=tubekids -e POSTGRES_USER=admin -e POSTGRES_PASSWORD=admin -p 5432:5432 -d postgres:12.3

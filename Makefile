@@ -1,12 +1,15 @@
 .PHONY: startdb initdb insert test
 
-DSN_DEVELOPMENT="user=postgres password=admin database=tubekids-development sslmode=disable"
-DSN_TEST="user=postgres password=admin database=tubekids-test port=5433 sslmode=disable"
+DSN_DEVELOPMENT="user=admin password=admin database=tubekids sslmode=disable"
+DSN_TEST="user=admin password=admin database=tubekids-test port=5433 sslmode=disable"
 
 DSN=${DSN_DEVELOPMENT}
 
 startdb:
-	docker run --rm --name tubekids-development -e POSTGRES_DB=tubekids-development -e POSTGRES_PASSWORD=admin -p 5432:5432 -d postgres:12.3
+	docker run --rm --name tubekids -e POSTGRES_DB=tubekids -e POSTGRES_USER=admin -e POSTGRES_PASSWORD=admin -p 5432:5432 -d postgres:12.3
+
+stopdb:
+	docker rm tubekids -f
 
 initdb:
 	go run ./scripts/initdb/main.go ${DSN}
@@ -16,7 +19,7 @@ insert:
 
 test:
 	(docker rm tubekids-test -f || true) > /dev/null 2>&1
-	docker run --rm --name tubekids-test -e POSTGRES_DB=tubekids-test -e POSTGRES_PASSWORD=admin -p 5433:5432 -d postgres:12.3
+	docker run --rm --name tubekids-test -e POSTGRES_DB=tubekids-test -e POSTGRES_USER=admin -e POSTGRES_PASSWORD=admin -p 5433:5432 -d postgres:12.3
 	# wait few seconds for start database
 	sleep 2
 	go run ./scripts/initdb/main.go ${DSN_TEST}

@@ -15,6 +15,6 @@ type Badge struct {
 
 type BadgeSlice []Badge
 
-func (m *Badges) Scan(val interface{}) error {
+func (m *BadgeSlice) Scan(val interface{}) error {
 	return scanJSON(m, val)
 }

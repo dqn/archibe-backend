@@ -93,7 +93,6 @@ func run() error {
 	badges := make([]models.Badge, 0, bufsize)
 
 	appendedChannels := make(map[string]struct{}, bufsize)
-	appendedBadges := make(map[string]struct{}, bufsize)
 
 	fmt.Println("start fetching chats...")
 
@@ -116,28 +115,25 @@ func run() error {
 				return err
 			}
 
-			if _, ok := appendedBadges[renderer.AuthorExternalChannelID]; !ok {
-				for _, b := range renderer.AuthorBadges {
-					switch b.LiveChatAuthorBadgeRenderer.Icon.IconType {
-					case "OWNER":
-						// do nothing
+			for _, b := range renderer.AuthorBadges {
+				switch b.LiveChatAuthorBadgeRenderer.Icon.IconType {
+				case "OWNER":
+					// do nothing
 
-					case "MODERATOR":
-						badges = append(badges, models.Badge{
-							ChatID:    item.LiveChatTextMessageRenderer.ID,
-							BadgeType: "moderator",
-						})
+				case "MODERATOR":
+					badges = append(badges, models.Badge{
+						ChatID:    item.LiveChatTextMessageRenderer.ID,
+						BadgeType: "moderator",
+					})
 
-					default:
-						badges = append(badges, models.Badge{
-							ChatID:    item.LiveChatTextMessageRenderer.ID,
-							BadgeType: "member",
-							ImageURL:  retrieveImageURL(b.LiveChatAuthorBadgeRenderer.CustomThumbnail.Thumbnails),
-							Label:     b.LiveChatAuthorBadgeRenderer.Accessibility.AccessibilityData.Label,
-						})
-					}
+				default:
+					badges = append(badges, models.Badge{
+						ChatID:    item.LiveChatTextMessageRenderer.ID,
+						BadgeType: "member",
+						ImageURL:  retrieveImageURL(b.LiveChatAuthorBadgeRenderer.CustomThumbnail.Thumbnails),
+						Label:     b.LiveChatAuthorBadgeRenderer.Accessibility.AccessibilityData.Label,
+					})
 				}
-				appendedBadges[renderer.AuthorExternalChannelID] = struct{}{}
 			}
 
 			chats = append(chats, models.Chat{

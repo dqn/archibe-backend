@@ -20,11 +20,10 @@ func TestBadgesInsertMany(t *testing.T) {
 	ex := BadgesExecutor{db}
 	_, err = ex.InsertMany([]models.Badge{
 		{
-			OwnerChannelID: "XXX",
-			LiverChannelID: "YYY",
-			BadgeType:      "member",
-			ImageURL:       "https://placehold.jp/64x64.png?text=dummy",
-			Label:          ":dummy:",
+			ChatID:    "XXX",
+			BadgeType: "member",
+			ImageURL:  "https://placehold.jp/64x64.png?text=dummy",
+			Label:     ":dummy:",
 		},
 	})
 	if err != nil {
@@ -46,7 +45,7 @@ func TestBadgesFindByChannelID(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(badges) != 2 {
+	if len(badges) != 1 {
 		t.Fatal("number of retrieved badges do not match")
 	}
 }

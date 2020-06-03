@@ -62,23 +62,26 @@ func (e *ChannelsExecutor) Find(channelID string) (*models.Channel, error) {
 		t1.updated_at,
 		jsonb_agg(DISTINCT jsonb_build_object(
 			'badge_type',
-			t2.badge_type,
+			t3.badge_type,
 			'image_url',
-			t2.image_url,
+			t3.image_url,
 			'label',
-			t2.label
+			t3.label
 		)) AS badges,
 		jsonb_agg(DISTINCT jsonb_build_object(
 			'video_id',
-			t3.video_id
+			t4.video_id
 		)) AS videos
 	FROM
 		channels AS t1
-		INNER JOIN badges AS t2 ON (
-			t1.channel_id = t2.owner_channel_id
+		INNER JOIN chats AS t2 ON (
+			t1.channel_id = t2.author_channel_id
 		)
-		INNER JOIN videos AS t3 ON (
-			t1.channel_id = t3.channel_id
+		INNER JOIN badges AS t3 ON (
+			t2.chat_id = t3.chat_id
+		)
+		INNER JOIN videos AS t4 ON (
+			t1.channel_id = t4.channel_id
 		)
 	WHERE
 		t1.channel_id = $1

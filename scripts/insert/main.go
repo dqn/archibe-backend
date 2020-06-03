@@ -124,18 +124,16 @@ func run() error {
 
 					case "MODERATOR":
 						badges = append(badges, models.Badge{
-							OwnerChannelID: renderer.AuthorExternalChannelID,
-							LiverChannelID: channelID,
-							BadgeType:      "moderator",
+							ChatID:    item.LiveChatTextMessageRenderer.ID,
+							BadgeType: "moderator",
 						})
 
 					default:
 						badges = append(badges, models.Badge{
-							OwnerChannelID: renderer.AuthorExternalChannelID,
-							LiverChannelID: channelID,
-							BadgeType:      "member",
-							ImageURL:       retrieveImageURL(b.LiveChatAuthorBadgeRenderer.CustomThumbnail.Thumbnails),
-							Label:          b.LiveChatAuthorBadgeRenderer.Accessibility.AccessibilityData.Label,
+							ChatID:    item.LiveChatTextMessageRenderer.ID,
+							BadgeType: "member",
+							ImageURL:  retrieveImageURL(b.LiveChatAuthorBadgeRenderer.CustomThumbnail.Thumbnails),
+							Label:     b.LiveChatAuthorBadgeRenderer.Accessibility.AccessibilityData.Label,
 						})
 					}
 				}
@@ -143,6 +141,7 @@ func run() error {
 			}
 
 			chats = append(chats, models.Chat{
+				ChatID:          item.LiveChatTextMessageRenderer.ID,
 				AuthorChannelID: renderer.AuthorExternalChannelID,
 				VideoID:         videoID,
 				Type:            "chat",
@@ -174,6 +173,7 @@ func run() error {
 			}
 
 			chats = append(chats, models.Chat{
+				ChatID:          item.LiveChatPaidMessageRenderer.ID,
 				AuthorChannelID: renderer.AuthorExternalChannelID,
 				VideoID:         videoID,
 				Type:            "super_chat",

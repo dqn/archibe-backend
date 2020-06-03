@@ -6,6 +6,7 @@ import (
 
 type Chat struct {
 	ID               int64               `db:"id" json:"id"`
+	ChatID           string              `db:"chat_id" json:"chat_id"`
 	AuthorChannelID  string              `db:"author_channel_id" json:"author_channel_id"`
 	VideoID          string              `db:"video_id" json:"video_id"`
 	Type             string              `db:"type" json:"type"`

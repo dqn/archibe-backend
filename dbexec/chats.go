@@ -15,6 +15,7 @@ type ChatsExecutor struct {
 func (e *ChatsExecutor) InsertMany(chats []models.Chat) (sql.Result, error) {
 	sql := `
 	INSERT INTO chats (
+		chat_id,
 		author_channel_id,
 		video_id,
 		type,
@@ -28,6 +29,7 @@ func (e *ChatsExecutor) InsertMany(chats []models.Chat) (sql.Result, error) {
 		updated_at
 	)
 	SELECT
+		chat_id,
 		author_channel_id,
 		video_id,
 		type,
@@ -41,6 +43,7 @@ func (e *ChatsExecutor) InsertMany(chats []models.Chat) (sql.Result, error) {
 		COALESCE(updated_at, NOW())
 	FROM
 		jsonb_to_recordset($1) AS x(
+			chat_id TEXT,
 			author_channel_id TEXT,
 			video_id TEXT,
 			type TEXT,
@@ -101,8 +104,7 @@ func (e *ChatsExecutor) FindByQuery(query *ChatsQuery) ([]models.Chat, error) {
 			t1.video_id = t3.video_id
 		)
 		INNER JOIN badges AS t4 ON (
-			t1.author_channel_id = t4.owner_channel_id
-			AND t3.channel_id = t4.liver_channel_id
+			t1.chat_id = t4.chat_id
 		)
 	WHERE
 		(
@@ -128,7 +130,7 @@ func (e *ChatsExecutor) FindByQuery(query *ChatsQuery) ([]models.Chat, error) {
 		t2.name,
 		t2.image_url
 	ORDER BY
-		created_at DESC
+		t1.created_at DESC
 	`
 
 	chats := []models.Chat{}

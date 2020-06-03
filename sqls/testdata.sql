@@ -37,6 +37,7 @@ INSERT INTO videos (
 
 INSERT INTO chats (
   author_channel_id,
+  chat_id,
   video_id,
   type,
   timestamp,
@@ -49,6 +50,7 @@ INSERT INTO chats (
   updated_at
 ) VALUES (
   'CHANNEL_A',
+  'CHAT_A',
   'VIDEO_B',
   'chat',
   '12:34',
@@ -61,6 +63,7 @@ INSERT INTO chats (
   NOW()
 ), (
   'CHANNEL_B',
+  'CHAT_A',
   'VIDEO_A',
   'super_chat',
   '43:21',
@@ -74,24 +77,21 @@ INSERT INTO chats (
 );
 
 INSERT INTO badges (
-	owner_channel_id,
-	liver_channel_id,
+	chat_id,
 	badge_type,
 	image_url,
 	label,
   created_at,
   updated_at
 ) VALUES (
-  'CHANNEL_A',
-  'CHANNEL_B',
+  'CHAT_A',
   'member',
   'https://placehold.jp/64x64.png?text=dummy',
   'dummy member badge',
   NOW(),
   NOW()
 ), (
-  'CHANNEL_A',
-  'CHANNEL_B',
+  'CHAT_B',
   'moderator',
   '',
   '',

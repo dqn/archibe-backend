@@ -15,8 +15,7 @@ type BadgesExecutor struct {
 func (e *BadgesExecutor) InsertMany(badges []models.Badge) (sql.Result, error) {
 	sql := `
 	INSERT INTO badges (
-		owner_channel_id,
-		liver_channel_id,
+		chat_id,
 		badge_type,
 		image_url,
 		label,
@@ -24,8 +23,7 @@ func (e *BadgesExecutor) InsertMany(badges []models.Badge) (sql.Result, error) {
 		updated_at
 	)
 	SELECT
-		owner_channel_id,
-		liver_channel_id,
+		chat_id,
 		badge_type,
 		image_url,
 		label,
@@ -33,15 +31,15 @@ func (e *BadgesExecutor) InsertMany(badges []models.Badge) (sql.Result, error) {
 		COALESCE(updated_at, NOW())
 	FROM
 		jsonb_to_recordset($1) AS x(
-			owner_channel_id TEXT,
-			liver_channel_id TEXT,
+			chat_id TEXT,
 			badge_type TEXT,
 			image_url TEXT,
 			label TEXT,
 			created_at TIMESTAMPTZ,
 			updated_at TIMESTAMPTZ
 		)
-	ON CONFLICT (owner_channel_id, liver_channel_id, badge_type) DO UPDATE SET
+	ON CONFLICT (chat_id) DO UPDATE SET
+		badge_type = EXCLUDED.badge_type,
 		image_url = EXCLUDED.image_url,
 		label = EXCLUDED.label,
 		updated_at = EXCLUDED.updated_at
@@ -57,18 +55,17 @@ func (e *BadgesExecutor) InsertMany(badges []models.Badge) (sql.Result, error) {
 
 func (e *BadgesExecutor) FindByChannelID(channelID string) ([]models.Badge, error) {
 	sql := `
-	SELECT
-		owner_channel_id,
-		liver_channel_id,
-		badge_type,
-		image_url,
-		label,
-		created_at,
-		updated_at
+	SELECT DISTINCT
+		t1.badge_type,
+		t1.image_url,
+		t1.label
 	FROM
-		badges
+		badges AS t1
+		INNER JOIN chats AS t2 ON (
+			t1.chat_id = t2.chat_id
+		)
 	WHERE
-		owner_channel_id = $1
+		t2.author_channel_id = $1
 	`
 
 	badges := []models.Badge{}

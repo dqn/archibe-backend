@@ -1,6 +1,7 @@
 package app
 
 import (
+	"github.com/dqn/tubekids/app/controllers"
 	"github.com/dqn/tubekids/dbexec"
 	"github.com/labstack/echo/v4"
 )
@@ -11,7 +12,8 @@ type App struct {
 }
 
 func (a *App) routes() {
-	a.Server.GET("/api/channels/:id", a.getChannel)
+	channels := controllers.ChannelsController{DBX: a.DBX}
+	a.Server.GET("/api/channels/:id", channels.GetChannel)
 }
 
 func (a *App) Start(address string) {

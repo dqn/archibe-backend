@@ -11,6 +11,8 @@ type Channel struct {
 	ReceivedChatCount int64      `db:"received_chat_count" json:"received_chat_count"`
 	CreatedAt         *time.Time `db:"created_at" json:"created_at"`
 	UpdatedAt         *time.Time `db:"updated_at" json:"updated_at"`
-	Badges            Badges     `db:"badges" json:"badges"`
-	Videos            Videos     `db:"videos" json:"videos"`
+	Badges            BadgeSlice `db:"badges" json:"badges"`
+	Videos            VideoSlice `db:"videos" json:"videos"`
 }
+
+type ChannelSlice []Channel

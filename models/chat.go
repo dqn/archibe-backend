@@ -5,21 +5,23 @@ import (
 )
 
 type Chat struct {
-	ID               int64             `db:"id" json:"id"`
-	AuthorChannelID  string            `db:"author_channel_id" json:"author_channel_id"`
-	VideoID          string            `db:"video_id" json:"video_id"`
-	Type             string            `db:"type" json:"type"`
-	Timestamp        string            `db:"timestamp" json:"timestamp"`
-	TimestampUsec    string            `db:"timestamp_usec" json:"timestamp_usec"`
-	MessageElements  MessageElements   `db:"message_elements" json:"message_elements"`
-	PurchaseAmount   float64           `db:"purchase_amount" json:"purchase_amount,omitempty"`
-	CurrencyUnit     string            `db:"currency_unit" json:"currency_unit,omitempty"`
-	SuperChatContext *SuperChatContext `db:"super_chat_context" json:"super_chat_context,omitempty"`
-	CreatedAt        *time.Time        `db:"created_at" json:"created_at"`
-	UpdatedAt        *time.Time        `db:"updated_at" json:"updated_at"`
-	Channel          *Channel          `db:"channel" json:"channel,omitempty"`
-	Badges           Badges            `db:"badges" json:"badges,omitempty"`
+	ID               int64               `db:"id" json:"id"`
+	AuthorChannelID  string              `db:"author_channel_id" json:"author_channel_id"`
+	VideoID          string              `db:"video_id" json:"video_id"`
+	Type             string              `db:"type" json:"type"`
+	Timestamp        string              `db:"timestamp" json:"timestamp"`
+	TimestampUsec    string              `db:"timestamp_usec" json:"timestamp_usec"`
+	MessageElements  MessageElementSlice `db:"message_elements" json:"message_elements"`
+	PurchaseAmount   float64             `db:"purchase_amount" json:"purchase_amount,omitempty"`
+	CurrencyUnit     string              `db:"currency_unit" json:"currency_unit,omitempty"`
+	SuperChatContext *SuperChatContext   `db:"super_chat_context" json:"super_chat_context,omitempty"`
+	CreatedAt        *time.Time          `db:"created_at" json:"created_at"`
+	UpdatedAt        *time.Time          `db:"updated_at" json:"updated_at"`
+	Channel          *Channel            `db:"channel" json:"channel,omitempty"`
+	Badges           BadgeSlice          `db:"badges" json:"badges,omitempty"`
 }
+
+type ChatSlice []Chat
 
 type MessageElement struct {
 	Type     string `json:"type"`
@@ -28,9 +30,9 @@ type MessageElement struct {
 	Label    string `json:"label"`
 }
 
-type MessageElements []MessageElement
+type MessageElementSlice []MessageElement
 
-func (m *MessageElements) Scan(val interface{}) error {
+func (m *MessageElementSlice) Scan(val interface{}) error {
 	return scanJSON(m, val)
 }
 

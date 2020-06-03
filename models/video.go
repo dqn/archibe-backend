@@ -10,8 +10,8 @@ type Video struct {
 	UpdatedAt *time.Time `db:"updated_at" json:"updated_at"`
 }
 
-type Videos []Video
+type VideoSlice []Video
 
-func (v *Videos) Scan(val interface{}) error {
+func (v *VideoSlice) Scan(val interface{}) error {
 	return scanJSON(v, val)
 }

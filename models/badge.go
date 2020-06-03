@@ -13,7 +13,7 @@ type Badge struct {
 	UpdatedAt      *time.Time `db:"updated_at" json:"updated_at"`
 }
 
-type Badges []Badge
+type BadgeSlice []Badge
 
 func (m *Badges) Scan(val interface{}) error {
 	return scanJSON(m, val)

@@ -21,7 +21,7 @@ func (e *ChannelsExecutor) InsertMany(channels []models.Channel) (sql.Result, er
 		created_at,
 		updated_at
 	)
-	SELECT
+	SELECT
 		channel_id,
 		name,
 		image_url,
@@ -56,37 +56,60 @@ func (e *ChannelsExecutor) Find(channelID string) (*models.Channel, error) {
 		t1.channel_id,
 		t1.name,
 		t1.image_url,
-		(SELECT COUNT(*) FROM chats WHERE chats.author_channel_id = $1) AS sent_chat_count,
-		(SELECT COUNT(*) FROM chats INNER JOIN videos ON chats.video_id = videos.video_id WHERE videos.channel_id = $1) AS received_chat_count,
+		(
+			SELECT
+				COUNT(*)
+			FROM
+				chats AS u1
+			WHERE
+				u1.author_channel_id = $1
+		) AS sent_chat_count,
+		(
+			SELECT
+				COUNT(*)
+			FROM
+				chats AS u1
+				INNER JOIN videos AS u2 ON (
+					u1.video_id = u2.video_id
+				)
+			WHERE
+				u2.channel_id = $1
+		) AS received_chat_count,
 		t1.created_at,
 		t1.updated_at,
-		jsonb_agg(DISTINCT jsonb_build_object(
-			'badge_type',
-			t3.badge_type,
-			'image_url',
-			t3.image_url,
-			'label',
-			t3.label
-		)) AS badges,
-		jsonb_agg(DISTINCT jsonb_build_object(
-			'video_id',
-			t4.video_id
-		)) AS videos
+		(
+			SELECT DISTINCT
+				COALESCE(jsonb_agg(jsonb_build_object(
+					'badge_type',
+					u1.badge_type,
+					'image_url',
+					u1.image_url,
+					'label',
+					u1.label
+				) ORDER BY u1.created_at), '[]')
+			FROM
+				badges AS u1
+				INNER JOIN chats AS u2 ON (
+					u1.chat_id = u2.chat_id
+				)
+			WHERE
+				u2.author_channel_id = $1
+		) AS badges,
+		(
+			SELECT DISTINCT
+				COALESCE(jsonb_agg(jsonb_build_object(
+					'video_id',
+					u1.video_id
+				) ORDER BY u1.created_at), '[]')
+			FROM
+				videos AS u1
+			WHERE
+				u1.channel_id = $1
+		) AS videos
 	FROM
 		channels AS t1
-		INNER JOIN chats AS t2 ON (
-			t1.channel_id = t2.author_channel_id
-		)
-		INNER JOIN badges AS t3 ON (
-			t2.chat_id = t3.chat_id
-		)
-		INNER JOIN videos AS t4 ON (
-			t1.channel_id = t4.channel_id
-		)
 	WHERE
 		t1.channel_id = $1
-	GROUP BY
-		t1.id
 	`
 
 	var channel models.Channel

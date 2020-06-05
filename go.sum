@@ -1,4 +1,5 @@
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/dgrijalva/jwt-go v3.2.0+incompatible h1:7qlOGliEKZXTDg6OTjfoBKDXWrumCAMpl/TFQ4/5kLM=
 github.com/dgrijalva/jwt-go v3.2.0+incompatible/go.mod h1:E3ru+11k8xSBh+hMPgOLZmtrrCbhqsmaPHjLKYnJCaQ=
 github.com/dqn/chatlog v0.0.0-20200525191249-2bb9432c83ce h1:lE6R+j2x8dUUUdBZXt4i9PnsHRakL2Ca1VclnrEVvVM=
 github.com/dqn/chatlog v0.0.0-20200525191249-2bb9432c83ce/go.mod h1:zGROyJDGGUdOn+YAJ4vrn3Dr8IRocDeUc3GQB80zWWw=

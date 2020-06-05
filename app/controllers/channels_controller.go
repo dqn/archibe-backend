@@ -12,5 +12,10 @@ type ChannelsController struct {
 }
 
 func (c *ChannelsController) GetChannel(ctx echo.Context) error {
-	return ctx.String(http.StatusOK, "Hello, World!")
+	channelID := ctx.Param("id")
+	channel, err := c.DBX.Channels.Find(channelID)
+	if err != nil {
+		return err
+	}
+	return ctx.JSON(http.StatusOK, channel)
 }

@@ -38,7 +38,7 @@ func (e *BadgesExecutor) InsertMany(badges []models.Badge) (sql.Result, error) {
 			created_at TIMESTAMPTZ,
 			updated_at TIMESTAMPTZ
 		)
-	ON CONFLICT (chat_id) DO UPDATE SET
+	ON CONFLICT (chat_id, badge_type) DO UPDATE SET
 		badge_type = EXCLUDED.badge_type,
 		image_url = EXCLUDED.image_url,
 		label = EXCLUDED.label,

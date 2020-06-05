@@ -78,7 +78,7 @@ func (e *ChannelsExecutor) Find(channelID string) (*models.Channel, error) {
 		t1.created_at,
 		t1.updated_at,
 		(
-			SELECT DISTINCT
+			SELECT
 				COALESCE(jsonb_agg(jsonb_build_object(
 					'badge_type',
 					u1.badge_type,
@@ -88,15 +88,24 @@ func (e *ChannelsExecutor) Find(channelID string) (*models.Channel, error) {
 					u1.label
 				) ORDER BY u1.created_at), '[]')
 			FROM
-				badges AS u1
-				INNER JOIN chats AS u2 ON (
-					u1.chat_id = u2.chat_id
-				)
-			WHERE
-				u2.author_channel_id = $1
+				(
+					SELECT DISTINCT
+						v1.badge_type,
+						v1.image_url,
+						v1.label,
+						v1.created_at
+					FROM
+						badges AS v1
+						INNER JOIN chats AS v2 ON (
+							v1.chat_id = v2.chat_id
+						)
+					WHERE
+						v1.badge_type != 'moderator'
+						AND v2.author_channel_id = $1
+				) AS u1
 		) AS badges,
 		(
-			SELECT DISTINCT
+			SELECT
 				COALESCE(jsonb_agg(jsonb_build_object(
 					'video_id',
 					u1.video_id

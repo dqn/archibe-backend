@@ -10,7 +10,14 @@ serve:
 	go run main.go ${ADDRESS} ${DSN}
 
 startdb:
-	docker run --rm --name tubekids -e POSTGRES_DB=tubekids -e POSTGRES_USER=admin -e POSTGRES_PASSWORD=admin -p 5432:5432 -d postgres:12.3
+	docker run --rm \
+		--name tubekids \
+		-v tubekids-postgtesql-data:/var/lib/postgresql/data \
+		-e POSTGRES_DB=tubekids \
+		-e POSTGRES_USER=admin \
+		-e POSTGRES_PASSWORD=admin \
+		-p 5432:5432 \
+		-d postgres:12.3
 
 stopdb:
 	docker rm tubekids -f

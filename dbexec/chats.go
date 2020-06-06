@@ -71,8 +71,8 @@ type ChatsQuery struct {
 	Q       string
 	Channel string
 	Video   string
-	Limit   uint
-	Offset  uint
+	Limit   uint64
+	Offset  uint64
 }
 
 func (e *ChatsExecutor) FindByQuery(query *ChatsQuery) ([]models.Chat, error) {

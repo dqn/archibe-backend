@@ -78,8 +78,10 @@ type ChatsQuery struct {
 func (e *ChatsExecutor) FindByQuery(query *ChatsQuery) ([]models.Chat, error) {
 	sql := `
 	SELECT
+		t1.chat_id,
 		t1.author_channel_id,
 		t1.video_id,
+		t1.type,
 		t1.timestamp,
 		t1.timestamp_usec,
 		t1.message_elements,
@@ -87,16 +89,27 @@ func (e *ChatsExecutor) FindByQuery(query *ChatsQuery) ([]models.Chat, error) {
 		t1.currency_unit,
 		t1.super_chat_context,
 		t1.created_at,
+		t1.updated_at,
+		t2.channel_id AS "channel.channel_id",
 		t2.name AS "channel.name",
 		t2.image_url AS "channel.image_url",
-		jsonb_agg(DISTINCT jsonb_build_object(
-			'badge_type',
-			t4.badge_type,
-			'image_url',
-			t4.image_url,
-			'label',
-			t4.label
-		)) AS "badges"
+		t2.created_at AS "channel.created_at",
+		t2.updated_at AS "channel.updated_at",
+		(
+			SELECT
+				COALESCE(jsonb_agg(jsonb_build_object(
+					'badge_type',
+					u1.badge_type,
+					'image_url',
+					u1.image_url,
+					'label',
+					u1.label
+				) ORDER BY u1.created_at), '[]')
+			FROM
+				badges AS u1
+			WHERE
+				u1.chat_id = t1.chat_id
+		) AS badges
 	FROM
 		chats AS t1
 		INNER JOIN channels AS t2 ON (
@@ -104,9 +117,6 @@ func (e *ChatsExecutor) FindByQuery(query *ChatsQuery) ([]models.Chat, error) {
 		)
 		INNER JOIN videos AS t3 ON (
 			t1.video_id = t3.video_id
-		)
-		INNER JOIN badges AS t4 ON (
-			t1.chat_id = t4.chat_id
 		)
 	WHERE
 		(
@@ -119,20 +129,8 @@ func (e *ChatsExecutor) FindByQuery(query *ChatsQuery) ([]models.Chat, error) {
 			$3 = ''
 			OR t1.video_id = $3
 		)
-	GROUP BY
-		t1.author_channel_id,
-		t1.video_id,
-		t1.timestamp,
-		t1.timestamp_usec,
-		t1.message_elements,
-		t1.purchase_amount,
-		t1.currency_unit,
-		t1.super_chat_context,
-		t1.created_at,
-		t2.name,
-		t2.image_url
 	ORDER BY
-		t1.created_at DESC
+		t1.timestamp_usec DESC
 	LIMIT
 		$4
 	OFFSET

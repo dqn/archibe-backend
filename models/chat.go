@@ -26,9 +26,9 @@ type ChatSlice []Chat
 
 type MessageElement struct {
 	Type     string `json:"type"`
-	Text     string `json:"text"`
-	ImageURL string `json:"image_url"`
-	Label    string `json:"label"`
+	Text     string `json:"text,omitempty"`
+	ImageURL string `json:"image_url,omitempty"`
+	Label    string `json:"label,omitempty"`
 }
 
 type MessageElementSlice []MessageElement
@@ -38,11 +38,11 @@ func (m *MessageElementSlice) Scan(val interface{}) error {
 }
 
 type SuperChatContext struct {
-	HeaderBackgroundColor string `json:"header_background_color"`
-	HeaderTextColor       string `json:"header_text_color"`
-	BodyBackgroundColor   string `json:"body_background_color"`
-	BodyTextColor         string `json:"body_text_color"`
-	AuthorNameTextColor   string `json:"author_name_text_color"`
+	HeaderBackgroundColor string `json:"header_background_color,omitempty"`
+	HeaderTextColor       string `json:"header_text_color,omitempty"`
+	BodyBackgroundColor   string `json:"body_background_color,omitempty"`
+	BodyTextColor         string `json:"body_text_color,omitempty"`
+	AuthorNameTextColor   string `json:"author_name_text_color,omitempty"`
 }
 
 func (s *SuperChatContext) Scan(val interface{}) error {

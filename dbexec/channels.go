@@ -56,6 +56,8 @@ func (e *ChannelsExecutor) Find(channelID string) (*models.Channel, error) {
 		t1.channel_id,
 		t1.name,
 		t1.image_url,
+		t1.created_at,
+		t1.updated_at,
 		(
 			SELECT
 				COUNT(*)
@@ -75,8 +77,6 @@ func (e *ChannelsExecutor) Find(channelID string) (*models.Channel, error) {
 			WHERE
 				u2.channel_id = $1
 		) AS received_chat_count,
-		t1.created_at,
-		t1.updated_at,
 		(
 			SELECT
 				COALESCE(jsonb_agg(jsonb_build_object(

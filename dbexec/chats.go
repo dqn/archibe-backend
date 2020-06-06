@@ -69,8 +69,10 @@ func (e *ChatsExecutor) InsertMany(chats []models.Chat) (sql.Result, error) {
 
 type ChatsQuery struct {
 	Q       string
-	CHANNEL string
-	VIDEO   string
+	Channel string
+	Video   string
+	Limit   uint
+	Offset  uint
 }
 
 func (e *ChatsExecutor) FindByQuery(query *ChatsQuery) ([]models.Chat, error) {
@@ -131,10 +133,14 @@ func (e *ChatsExecutor) FindByQuery(query *ChatsQuery) ([]models.Chat, error) {
 		t2.image_url
 	ORDER BY
 		t1.created_at DESC
+	LIMIT
+		$4
+	OFFSET
+		$5
 	`
 
 	chats := []models.Chat{}
-	if err := e.db.Select(&chats, sql, query.Q, query.CHANNEL, query.VIDEO); err != nil {
+	if err := e.db.Select(&chats, sql, query.Q, query.Channel, query.Video, query.Limit, query.Offset); err != nil {
 		return nil, err
 	}
 

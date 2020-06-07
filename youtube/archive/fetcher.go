@@ -6,13 +6,14 @@ import (
 	"strings"
 
 	"github.com/dqn/chatlog"
+	"github.com/dqn/tubekids/lib"
 	"github.com/dqn/tubekids/models"
 )
 
 type ArchiveFetcher struct {
 	videoID     string
 	result      *ArchiveResult
-	channelMemo map[string]struct{}
+	channelMemo *lib.Memo
 }
 
 type ArchiveResult struct {
@@ -28,14 +29,13 @@ func NewFetcher(videoID string) *ArchiveFetcher {
 func (a *ArchiveFetcher) Fetch() (*ArchiveResult, error) {
 	c := chatlog.New(a.videoID)
 
-	bufsize := 1024
+	var size uint64 = 1024
 	a.result = &ArchiveResult{
-		Channels: make([]models.Channel, 0, bufsize),
-		Chats:    make([]models.Chat, 0, bufsize),
-		Badges:   make([]models.Badge, 0, bufsize),
+		Channels: make([]models.Channel, 0, size),
+		Chats:    make([]models.Chat, 0, size),
+		Badges:   make([]models.Badge, 0, size),
 	}
-
-	a.channelMemo = make(map[string]struct{}, bufsize)
+	a.channelMemo = lib.NewMemo(size)
 
 	err := c.HandleChatItem(func(item *chatlog.ChatItem) error {
 		switch {
@@ -55,13 +55,13 @@ func (a *ArchiveFetcher) Fetch() (*ArchiveResult, error) {
 }
 
 func (a *ArchiveFetcher) handleTextMessage(renderer *chatlog.LiveChatTextMessageRenderer) error {
-	if _, ok := a.channelMemo[renderer.AuthorExternalChannelID]; !ok {
+	if !a.channelMemo.Exists(renderer.AuthorExternalChannelID) {
 		a.result.Channels = append(a.result.Channels, models.Channel{
 			ChannelID: renderer.AuthorExternalChannelID,
 			Name:      renderer.AuthorName.SimpleText,
 			ImageURL:  retrieveImageURL(renderer.AuthorPhoto.Thumbnails),
 		})
-		a.channelMemo[renderer.AuthorExternalChannelID] = struct{}{}
+		a.channelMemo.Add(renderer.AuthorExternalChannelID)
 	}
 
 	me, err := parseMessage(&renderer.Message)
@@ -104,13 +104,13 @@ func (a *ArchiveFetcher) handleTextMessage(renderer *chatlog.LiveChatTextMessage
 }
 
 func (a *ArchiveFetcher) handlePaidMessage(renderer *chatlog.LiveChatPaidMessageRenderer) error {
-	if _, ok := a.channelMemo[renderer.AuthorExternalChannelID]; !ok {
+	if !a.channelMemo.Exists(renderer.AuthorExternalChannelID) {
 		a.result.Channels = append(a.result.Channels, models.Channel{
 			ChannelID: renderer.AuthorExternalChannelID,
 			Name:      renderer.AuthorName.SimpleText,
 			ImageURL:  retrieveImageURL(renderer.AuthorPhoto.Thumbnails),
 		})
-		a.channelMemo[renderer.AuthorExternalChannelID] = struct{}{}
+		a.channelMemo.Add(renderer.AuthorExternalChannelID)
 	}
 
 	me, err := parseMessage(&renderer.Message)
@@ -118,7 +118,7 @@ func (a *ArchiveFetcher) handlePaidMessage(renderer *chatlog.LiveChatPaidMessage
 		return err
 	}
 
-	unit, amount, err := parseNagesen(renderer.PurchaseAmountText.SimpleText)
+	unit, amount, err := parseSuperChat(renderer.PurchaseAmountText.SimpleText)
 	if err != nil {
 		return err
 	}
@@ -153,17 +153,19 @@ func retrieveImageURL(thumbnails []chatlog.Thumbnail) string {
 	return thumbnails[len(thumbnails)-1].URL
 }
 
-func parseNagesen(str string) (string, float64, error) {
+func parseSuperChat(str string) (string, float64, error) {
 	unit := strings.TrimRight(str, "0123456789.,")
 	s := strings.TrimLeft(str, unit)
 	s = strings.ReplaceAll(s, ",", "")
 	amount, err := strconv.ParseFloat(s, 64)
 	unit = strings.ReplaceAll(unit, "￥", "¥")
+
 	return unit, amount, err
 }
 
 func parseMessage(message *chatlog.Message) ([]models.MessageElement, error) {
 	me := make([]models.MessageElement, 0, len(message.Runs))
+
 	for _, v := range message.Runs {
 		var m models.MessageElement
 		switch {
@@ -171,14 +173,15 @@ func parseMessage(message *chatlog.Message) ([]models.MessageElement, error) {
 			m.Type = "emoji"
 			m.ImageURL = retrieveImageURL(v.Emoji.Image.Thumbnails)
 			m.Label = v.Emoji.Image.Accessibility.AccessibilityData.Label
+
 		case v.Text != "":
 			m.Type = "text"
 			m.Text = v.Text
+
 		default:
 			err := fmt.Errorf("unknown message: %#v", v)
 			return nil, err
 		}
-
 		me = append(me, m)
 	}
 

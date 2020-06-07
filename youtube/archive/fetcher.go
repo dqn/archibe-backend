@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/dqn/chatlog"
-	"github.com/dqn/chatlog/chat"
 	"github.com/dqn/tubekids/models"
 )
 
@@ -27,10 +26,7 @@ func NewFetcher(videoID string) *ArchiveFetcher {
 }
 
 func (a *ArchiveFetcher) Fetch() (*ArchiveResult, error) {
-	cl, err := chatlog.New(a.videoID)
-	if err != nil {
-		return nil, err
-	}
+	c := chatlog.New(a.videoID)
 
 	bufsize := 1024
 	a.result = &ArchiveResult{
@@ -41,7 +37,7 @@ func (a *ArchiveFetcher) Fetch() (*ArchiveResult, error) {
 
 	a.channelMemo = make(map[string]struct{}, bufsize)
 
-	err = processEachChatItem(cl, func(item *chat.ChatItem) error {
+	err := c.HandleChatItem(func(item *chatlog.ChatItem) error {
 		switch {
 		case item.LiveChatTextMessageRenderer.ID != "":
 			return a.handleTextMessage(&item.LiveChatTextMessageRenderer)
@@ -58,7 +54,7 @@ func (a *ArchiveFetcher) Fetch() (*ArchiveResult, error) {
 	return a.result, nil
 }
 
-func (a *ArchiveFetcher) handleTextMessage(renderer *chat.LiveChatTextMessageRenderer) error {
+func (a *ArchiveFetcher) handleTextMessage(renderer *chatlog.LiveChatTextMessageRenderer) error {
 	if _, ok := a.channelMemo[renderer.AuthorExternalChannelID]; !ok {
 		a.result.Channels = append(a.result.Channels, models.Channel{
 			ChannelID: renderer.AuthorExternalChannelID,
@@ -107,7 +103,7 @@ func (a *ArchiveFetcher) handleTextMessage(renderer *chat.LiveChatTextMessageRen
 	return nil
 }
 
-func (a *ArchiveFetcher) handlePaidMessage(renderer *chat.LiveChatPaidMessageRenderer) error {
+func (a *ArchiveFetcher) handlePaidMessage(renderer *chatlog.LiveChatPaidMessageRenderer) error {
 	if _, ok := a.channelMemo[renderer.AuthorExternalChannelID]; !ok {
 		a.result.Channels = append(a.result.Channels, models.Channel{
 			ChannelID: renderer.AuthorExternalChannelID,
@@ -153,7 +149,7 @@ func toHex(d int) string {
 	return strconv.FormatInt(int64(d), 16)
 }
 
-func retrieveImageURL(thumbnails []chat.Thumbnail) string {
+func retrieveImageURL(thumbnails []chatlog.Thumbnail) string {
 	return thumbnails[len(thumbnails)-1].URL
 }
 
@@ -166,7 +162,7 @@ func parseNagesen(str string) (string, float64, error) {
 	return unit, amount, err
 }
 
-func parseMessage(message *chat.Message) ([]models.MessageElement, error) {
+func parseMessage(message *chatlog.Message) ([]models.MessageElement, error) {
 	me := make([]models.MessageElement, 0, len(message.Runs))
 	for _, v := range message.Runs {
 		var m models.MessageElement
@@ -187,23 +183,4 @@ func parseMessage(message *chat.Message) ([]models.MessageElement, error) {
 	}
 
 	return me, nil
-}
-
-func processEachChatItem(cl *chatlog.Chatlog, handler func(item *chat.ChatItem) error) error {
-	for cl.Continuation != "" {
-		continuationActions, err := cl.Fecth()
-		if err != nil {
-			return err
-		}
-
-		for _, ca := range continuationActions {
-			for _, a := range ca.ReplayChatItemAction.Actions {
-				if err = handler(&a.AddChatItemAction.Item); err != nil {
-					return err
-				}
-			}
-		}
-	}
-
-	return nil
 }

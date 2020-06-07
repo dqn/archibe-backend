@@ -10,7 +10,7 @@ func NewMemo(size uint64) *Memo {
 }
 
 func (s *Memo) Add(key string) {
-	s.m["key"] = struct{}{}
+	s.m[key] = struct{}{}
 }
 
 func (s *Memo) Exists(key string) bool {

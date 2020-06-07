@@ -63,7 +63,7 @@ INSERT INTO chats (
   NOW()
 ), (
   'CHANNEL_B',
-  'CHAT_A',
+  'CHAT_B',
   'VIDEO_A',
   'super_chat',
   '43:21',

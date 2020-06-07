@@ -56,7 +56,17 @@ func (e *ChatsExecutor) InsertMany(chats []models.Chat) (sql.Result, error) {
 			created_at TIMESTAMPTZ,
 			updated_at TIMESTAMPTZ
 		)
-	ON CONFLICT(author_channel_id, video_id, timestamp_usec) DO NOTHING
+	ON CONFLICT(chat_id) DO UPDATE SET
+		author_channel_id = EXCLUDED.author_channel_id,
+		video_id = EXCLUDED.video_id,
+		type = EXCLUDED.type,
+		timestamp = EXCLUDED.timestamp,
+		timestamp_usec = EXCLUDED.timestamp_usec,
+		message_elements = EXCLUDED.message_elements,
+		purchase_amount = EXCLUDED.purchase_amount,
+		currency_unit = EXCLUDED.currency_unit,
+		super_chat_context = EXCLUDED.super_chat_context,
+		updated_at = EXCLUDED.updated_at
 	`
 
 	b, err := json.Marshal(chats)

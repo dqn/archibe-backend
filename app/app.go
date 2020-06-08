@@ -16,8 +16,11 @@ func (a *App) routes() {
 	channels := controllers.ChannelsController{DBX: a.DBX}
 	a.Server.GET("/api/channels/:id", channels.GetChannel)
 
-	channelChats := controllers.ChatsController{DBX: a.DBX}
-	a.Server.GET("/api/chats", channelChats.GetChats)
+	chats := controllers.ChatsController{DBX: a.DBX}
+	a.Server.GET("/api/chats", chats.GetChats)
+
+	videos := controllers.VideosController{DBX: a.DBX}
+	a.Server.GET("/api/videos/:id", videos.GetVideo)
 }
 
 func (a *App) Start(address string) {

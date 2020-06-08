@@ -67,3 +67,37 @@ func (e *VideosExecutor) InsertOne(video *models.Video) (sql.Result, error) {
 
 	return e.db.NamedExec(sql, video)
 }
+
+func (e *VideosExecutor) Find(videoID string) (*models.Video, error) {
+	sql := `
+	SELECT
+		t1.id,
+		t1.video_id,
+		t1.channel_id,
+		t1.title,
+		t1.description,
+		t1.length_seconds,
+		t1.view_count,
+		t1.average_rating,
+		t1.thumbnail_url,
+		t1.category,
+		t1.is_private,
+		t1.publish_date,
+		t1.upload_date,
+		t1.live_started_at,
+		t1.live_ended_at,
+		t1.created_at,
+		t1.updated_at
+	FROM
+		videos AS t1
+	WHERE
+		video_id = $1
+	`
+
+	var video models.Video
+	if err := e.db.Get(&video, sql, videoID); err != nil {
+		return nil, err
+	}
+
+	return &video, nil
+}

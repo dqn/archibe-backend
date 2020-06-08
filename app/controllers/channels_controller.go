@@ -12,8 +12,8 @@ type ChannelsController struct {
 }
 
 func (c *ChannelsController) GetChannel(ctx echo.Context) error {
-	channelID := ctx.Param("id")
-	channel, err := c.DBX.Channels.Find(channelID)
+	id := ctx.Param("id")
+	channel, err := c.DBX.Channels.Find(id)
 	if err != nil {
 		return err
 	}

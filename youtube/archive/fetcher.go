@@ -150,7 +150,11 @@ func toHex(d int) string {
 }
 
 func retrieveImageURL(thumbnails []chatlog.Thumbnail) string {
-	return thumbnails[len(thumbnails)-1].URL
+	lastIndex := len(thumbnails) - 1
+	if lastIndex == -1 {
+		return ""
+	}
+	return thumbnails[lastIndex].URL
 }
 
 func parseSuperChat(str string) (string, float64, error) {

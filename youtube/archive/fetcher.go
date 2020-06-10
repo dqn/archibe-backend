@@ -90,13 +90,15 @@ func (a *ArchiveFetcher) handleTextMessage(renderer *chatlog.LiveChatTextMessage
 		}
 	}
 
+	timestampUsec, _ := strconv.ParseInt(renderer.TimestampUsec, 10, 64)
+
 	a.result.Chats = append(a.result.Chats, models.Chat{
 		ChatID:          renderer.ID,
 		AuthorChannelID: renderer.AuthorExternalChannelID,
 		VideoID:         a.videoID,
 		Type:            "chat",
 		Timestamp:       renderer.TimestampText.SimpleText,
-		TimestampUsec:   renderer.TimestampUsec,
+		TimestampUsec:   timestampUsec,
 		MessageElements: me,
 	})
 
@@ -123,13 +125,15 @@ func (a *ArchiveFetcher) handlePaidMessage(renderer *chatlog.LiveChatPaidMessage
 		return err
 	}
 
+	timestampUsec, _ := strconv.ParseInt(renderer.TimestampUsec, 10, 64)
+
 	a.result.Chats = append(a.result.Chats, models.Chat{
 		ChatID:          renderer.ID,
 		AuthorChannelID: renderer.AuthorExternalChannelID,
 		VideoID:         a.videoID,
 		Type:            "super_chat",
 		Timestamp:       renderer.TimestampText.SimpleText,
-		TimestampUsec:   renderer.TimestampUsec,
+		TimestampUsec:   timestampUsec,
 		MessageElements: me,
 		PurchaseAmount:  amount,
 		CurrencyUnit:    unit,
@@ -162,7 +166,7 @@ func parseSuperChat(str string) (string, float64, error) {
 	s := strings.TrimLeft(str, unit)
 	s = strings.ReplaceAll(s, ",", "")
 	amount, err := strconv.ParseFloat(s, 64)
-	unit = strings.ReplaceAll(unit, "￥", "¥")
+	unit = strings.TrimSpace(strings.ReplaceAll(unit, "￥", "¥"))
 
 	return unit, amount, err
 }

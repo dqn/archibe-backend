@@ -11,7 +11,7 @@ type Chat struct {
 	VideoID          string              `db:"video_id" json:"video_id"`
 	Type             string              `db:"type" json:"type"`
 	Timestamp        string              `db:"timestamp" json:"timestamp"`
-	TimestampUsec    string              `db:"timestamp_usec" json:"timestamp_usec"`
+	TimestampUsec    int64               `db:"timestamp_usec" json:"timestamp_usec"`
 	MessageElements  MessageElementSlice `db:"message_elements" json:"message_elements"`
 	PurchaseAmount   float64             `db:"purchase_amount" json:"purchase_amount,omitempty"`
 	CurrencyUnit     string              `db:"currency_unit" json:"currency_unit,omitempty"`

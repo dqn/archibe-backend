@@ -37,7 +37,7 @@ CREATE TABLE chats (
   video_id TEXT NOT NULL DEFAULT '',
   type TEXT NOT NULL DEFAULT '',
   timestamp TEXT NOT NULL DEFAULT '',
-  timestamp_usec TEXT NOT NULL DEFAULT '',
+  timestamp_usec BIGINT NOT NULL DEFAULT 0,
   message_elements JSONB NOT NULL DEFAULT '[]',
   purchase_amount NUMERIC DEFAULT 0.0,
   currency_unit TEXT NOT NULL DEFAULT '',

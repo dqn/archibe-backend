@@ -49,7 +49,7 @@ func (e *ChatsExecutor) InsertMany(chats []models.Chat) (sql.Result, error) {
 			video_id TEXT,
 			type TEXT,
 			timestamp TEXT,
-			timestamp_usec TEXT,
+			timestamp_usec BIGINT,
 			message_elements JSONB,
 			purchase_amount NUMERIC,
 			currency_unit TEXT,

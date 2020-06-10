@@ -22,11 +22,15 @@ func parseUintWithDefault(str string, dflt uint64) uint64 {
 
 func (c *ChatsController) GetChats(ctx echo.Context) error {
 	channelID := ctx.QueryParam("channel_id")
+	videoID := ctx.QueryParam("video_id")
+	order := ctx.QueryParam("order")
 	limit := parseUintWithDefault(ctx.QueryParam("limit"), 30)
 	offset := parseUintWithDefault(ctx.QueryParam("offset"), 0)
 
 	chats, err := c.DBX.Chats.FindByQuery(&dbexec.ChatsQuery{
 		Channel: channelID,
+		Video:   videoID,
+		Order:   order,
 		Limit:   limit,
 		Offset:  offset,
 	})

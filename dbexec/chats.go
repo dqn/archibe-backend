@@ -3,6 +3,7 @@ package dbexec
 import (
 	"database/sql"
 	"encoding/json"
+	"strings"
 
 	"github.com/dqn/tubekids/models"
 	"github.com/jmoiron/sqlx"
@@ -81,11 +82,17 @@ type ChatsQuery struct {
 	Q       string
 	Channel string
 	Video   string
+	Order   string
 	Limit   uint64
 	Offset  uint64
 }
 
 func (e *ChatsExecutor) FindByQuery(query *ChatsQuery) ([]models.Chat, error) {
+	order := strings.ToUpper(query.Order)
+	if order != "DESC" {
+		order = "ASC"
+	}
+
 	sql := `
 	SELECT
 		t1.chat_id,
@@ -140,7 +147,7 @@ func (e *ChatsExecutor) FindByQuery(query *ChatsQuery) ([]models.Chat, error) {
 			OR t1.video_id = $3
 		)
 	ORDER BY
-		t1.timestamp_usec DESC
+		t1.timestamp_usec ` + order + `
 	LIMIT
 		$4
 	OFFSET

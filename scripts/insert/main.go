@@ -9,6 +9,7 @@ import (
 	"github.com/dqn/tubekids/dbexec"
 	"github.com/dqn/tubekids/models"
 	"github.com/dqn/tubekids/youtube/archive"
+	"github.com/dqn/tubekids/youtube/scrape"
 	"github.com/dqn/ytvi"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -46,10 +47,15 @@ func run() error {
 
 	pmr := pr.Microformat.PlayerMicroformatRenderer
 
+	channelImageURL, err := scrape.RetrieveChannelImageURL(pmr.OwnerProfileURL)
+	if err != nil {
+		return err
+	}
+
 	ownerChannel := models.Channel{
 		ChannelID: pmr.ExternalChannelID,
 		Name:      pmr.OwnerChannelName,
-		ImageURL:  pmr.OwnerProfileURL,
+		ImageURL:  channelImageURL,
 	}
 
 	acv.Channels = append(acv.Channels, ownerChannel)

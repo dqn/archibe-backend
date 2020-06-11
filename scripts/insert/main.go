@@ -15,6 +15,15 @@ import (
 	_ "github.com/lib/pq"
 )
 
+func channelExists(channels []models.Channel, channelID string) bool {
+	for i := range channels {
+		if channels[i].ChannelID == channelID {
+			return true
+		}
+	}
+	return false
+}
+
 func run() error {
 	if len(os.Args) != 3 {
 		return fmt.Errorf("invalid arguments")
@@ -31,6 +40,27 @@ func run() error {
 		return err
 	}
 
+	pr, err := ytvi.GetVideoInfo(videoID)
+	if err != nil {
+		return err
+	}
+
+	pmr := pr.Microformat.PlayerMicroformatRenderer
+	if !channelExists(acv.Channels, pmr.ExternalChannelID) {
+		channelImageURL, err := scrape.RetrieveChannelImageURL(pmr.OwnerProfileURL)
+		if err != nil {
+			return err
+		}
+
+		ownerChannel := models.Channel{
+			ChannelID: pmr.ExternalChannelID,
+			Name:      pmr.OwnerChannelName,
+			ImageURL:  channelImageURL,
+		}
+
+		acv.Channels = append(acv.Channels, ownerChannel)
+	}
+
 	fmt.Println("start inserting to database...")
 
 	db, err := sqlx.Open("postgres", dsn)
@@ -39,26 +69,6 @@ func run() error {
 	}
 	defer db.Close()
 	dbx := dbexec.NewExecutor(db)
-
-	pr, err := ytvi.GetVideoInfo(videoID)
-	if err != nil {
-		return err
-	}
-
-	pmr := pr.Microformat.PlayerMicroformatRenderer
-
-	channelImageURL, err := scrape.RetrieveChannelImageURL(pmr.OwnerProfileURL)
-	if err != nil {
-		return err
-	}
-
-	ownerChannel := models.Channel{
-		ChannelID: pmr.ExternalChannelID,
-		Name:      pmr.OwnerChannelName,
-		ImageURL:  channelImageURL,
-	}
-
-	acv.Channels = append(acv.Channels, ownerChannel)
 
 	lengthSeconds, err := strconv.ParseInt(pmr.LengthSeconds, 10, 64)
 	if err != nil {

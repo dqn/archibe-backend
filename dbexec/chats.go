@@ -126,7 +126,24 @@ func (e *ChatsExecutor) FindByQuery(query *ChatsQuery) ([]models.Chat, error) {
 				badges AS u1
 			WHERE
 				u1.chat_id = t1.chat_id
-		) AS badges
+		) AS badges,
+		t3.id AS "video.id",
+		t3.video_id AS "video.video_id",
+		t3.channel_id AS "video.channel_id",
+		t3.title AS "video.title",
+		t3.description AS "video.description",
+		t3.length_seconds AS "video.length_seconds",
+		t3.view_count AS "video.view_count",
+		t3.average_rating AS "video.average_rating",
+		t3.thumbnail_url AS "video.thumbnail_url",
+		t3.category AS "video.category",
+		t3.is_private AS "video.is_private",
+		t3.publish_date AS "video.publish_date",
+		t3.upload_date AS "video.upload_date",
+		t3.live_started_at AS "video.live_started_at",
+		t3.live_ended_at AS "video.live_ended_at",
+		t3.created_at AS "video.created_at",
+		t3.updated_at AS "video.updated_at"
 	FROM
 		chats AS t1
 		INNER JOIN channels AS t2 ON (

@@ -23,7 +23,7 @@ func TestChatsInsertMany(t *testing.T) {
 			AuthorChannelID: "AAAAA",
 			VideoID:         "BBBBB",
 			Timestamp:       "00:00",
-			TimestampUsec:   "123456789",
+			TimestampUsec:   123456789,
 			MessageElements: []models.MessageElement{
 				{Type: "text", Text: "foo"},
 				{Type: "text", Text: "bar"},

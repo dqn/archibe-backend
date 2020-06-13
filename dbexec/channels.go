@@ -86,22 +86,28 @@ func (e *ChannelsExecutor) Find(channelID string) (*models.Channel, error) {
 					u1.image_url,
 					'label',
 					u1.label
-				) ORDER BY u1.created_at), '[]')
+				) ORDER BY u1.channel_id), '[]')
 			FROM
 				(
-					SELECT DISTINCT
+					SELECT DISTINCT ON (v3.channel_id) -- select latest badge for each channel
 						v1.badge_type,
 						v1.image_url,
 						v1.label,
-						v1.created_at
+						v3.channel_id
 					FROM
 						badges AS v1
 						INNER JOIN chats AS v2 ON (
 							v1.chat_id = v2.chat_id
 						)
+						INNER JOIN videos AS v3 ON (
+							v2.video_id = v3.video_id
+						)
 					WHERE
 						v1.badge_type != 'moderator'
 						AND v2.author_channel_id = $1
+					ORDER BY
+						v3.channel_id,
+						v2.timestamp_usec DESC
 				) AS u1
 		) AS badges,
 		(

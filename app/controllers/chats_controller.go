@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/dqn/tubekids/dbexec"
 	"github.com/labstack/echo/v4"
@@ -10,14 +9,6 @@ import (
 
 type ChatsController struct {
 	DBX *dbexec.DBExecutor
-}
-
-func parseUintWithDefault(str string, dflt uint64) uint64 {
-	if v, err := strconv.ParseUint(str, 10, 64); err == nil {
-		return v
-	} else {
-		return dflt
-	}
 }
 
 func (c *ChatsController) GetChats(ctx echo.Context) error {

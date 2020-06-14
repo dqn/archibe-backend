@@ -49,6 +49,38 @@ func (e *ChannelsExecutor) InsertMany(channels []models.Channel) (sql.Result, er
 	return e.db.Exec(sql, string(b))
 }
 
+type ChannelsQuery struct {
+	Q      string
+	Limit  uint64
+	Offset uint64
+}
+
+func (e *ChannelsExecutor) FindByQuery(query *ChannelsQuery) ([]models.Channel, error) {
+	sql := `
+	SELECT
+		t1.id,
+		t1.channel_id,
+		t1.name,
+		t1.image_url
+	FROM
+		channels AS t1
+	WHERE
+		$1 = ''
+		OR t1.name ~ $1
+	LIMIT
+		$2
+	OFFSET
+		$3
+	`
+
+	channels := []models.Channel{}
+	if err := e.db.Select(&channels, sql, query.Q, query.Limit, query.Offset); err != nil {
+		return nil, err
+	}
+
+	return channels, nil
+}
+
 func (e *ChannelsExecutor) Find(channelID string) (*models.Channel, error) {
 	sql := `
 	SELECT

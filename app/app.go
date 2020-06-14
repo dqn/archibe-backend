@@ -15,6 +15,7 @@ type App struct {
 func (a *App) routes() {
 	channels := controllers.ChannelsController{DBX: a.DBX}
 	a.Server.GET("/api/channels/:id", channels.GetChannel)
+	a.Server.GET("/api/channels", channels.GetChannels)
 
 	chats := controllers.ChatsController{DBX: a.DBX}
 	a.Server.GET("/api/chats", chats.GetChats)

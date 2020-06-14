@@ -49,3 +49,14 @@ type SuperChatContext struct {
 func (s *SuperChatContext) Scan(val interface{}) error {
 	return scanJSON(s, val)
 }
+
+type SuperChatPerCurrencyUnit struct {
+	CurrencyUnit   string  `json:"currency_unit"`
+	PurchaseAmount float64 `json:"purchase_amount"`
+}
+
+type SuperChatPerCurrencyUnitSlice []SuperChatPerCurrencyUnit
+
+func (t *SuperChatPerCurrencyUnitSlice) Scan(val interface{}) error {
+	return scanJSON(t, val)
+}

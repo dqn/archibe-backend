@@ -96,7 +96,7 @@ func (e *VideosExecutor) Find(videoID string) (*models.Video, error) {
 					jsonb_build_object(
 						'currency_unit',
 						v1.currency_unit,
-						'total_purchase_amount',
+						'purchase_amount',
 						SUM(v1.purchase_amount)
 					) AS object
 				FROM
@@ -107,7 +107,7 @@ func (e *VideosExecutor) Find(videoID string) (*models.Video, error) {
 				GROUP BY
 					v1.currency_unit
 			) AS u1
-		) AS total_purchase_amounts,
+		) AS received_super_chats,
 		t2.id AS "channel.id",
 		t2.channel_id AS "channel.channel_id",
 		t2.name AS "channel.name",

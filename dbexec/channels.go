@@ -60,6 +60,49 @@ func (e *ChannelsExecutor) Find(channelID string) (*models.Channel, error) {
 		t1.updated_at,
 		(
 			SELECT
+				COALESCE(jsonb_agg(u1.object), '[]')
+			FROM (
+				SELECT
+					jsonb_build_object(
+						'currency_unit',
+						v1.currency_unit,
+						'purchase_amount',
+						SUM(v1.purchase_amount)
+					) AS object
+				FROM
+					chats AS v1
+				WHERE
+					v1.author_channel_id = $1
+					AND v1.currency_unit != ''
+				GROUP BY
+					v1.currency_unit
+			) AS u1
+		) AS sent_super_chats,
+		(
+			SELECT
+				COALESCE(jsonb_agg(u1.object), '[]')
+			FROM (
+				SELECT
+					jsonb_build_object(
+						'currency_unit',
+						v1.currency_unit,
+						'purchase_amount',
+						SUM(v1.purchase_amount)
+					) AS object
+				FROM
+					chats AS v1
+					INNER JOIN videos AS v2 ON (
+						v1.video_id = v2.video_id
+					)
+				WHERE
+					v2.channel_id = $1
+					AND v1.currency_unit != ''
+				GROUP BY
+					v1.currency_unit
+			) AS u1
+		) AS received_super_chats,
+		(
+			SELECT
 				COUNT(*)
 			FROM
 				chats AS u1

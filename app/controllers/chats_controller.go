@@ -24,10 +24,12 @@ func (c *ChatsController) GetChats(ctx echo.Context) error {
 	channelID := ctx.QueryParam("channel_id")
 	videoID := ctx.QueryParam("video_id")
 	order := ctx.QueryParam("order")
+	q := ctx.QueryParam("q")
 	limit := parseUintWithDefault(ctx.QueryParam("limit"), 30)
 	offset := parseUintWithDefault(ctx.QueryParam("offset"), 0)
 
 	chats, err := c.DBX.Chats.FindByQuery(&dbexec.ChatsQuery{
+		Q:       q,
 		Channel: channelID,
 		Video:   videoID,
 		Order:   order,

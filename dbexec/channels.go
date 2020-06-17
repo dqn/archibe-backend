@@ -221,9 +221,41 @@ func (e *ChannelsExecutor) Find(channelID string) (*models.Channel, error) {
 		(
 			SELECT
 				COALESCE(jsonb_agg(jsonb_build_object(
+					'id',
+					u1.id,
 					'video_id',
-					u1.video_id
-				) ORDER BY u1.created_at), '[]')
+					u1.video_id,
+					'channel_id',
+					u1.channel_id,
+					'title',
+					u1.title,
+					'description',
+					u1.description,
+					'length_seconds',
+					u1.length_seconds,
+					'view_count',
+					u1.view_count,
+					'average_rating',
+					u1.average_rating,
+					'thumbnail_url',
+					u1.thumbnail_url,
+					'category',
+					u1.category,
+					'is_private',
+					u1.is_private,
+					'publish_date',
+					u1.publish_date,
+					'upload_date',
+					u1.upload_date,
+					'live_started_at',
+					u1.live_started_at,
+					'live_ended_at',
+					u1.live_ended_at,
+					'created_at',
+					u1.created_at,
+					'updated_at',
+					u1.updated_at
+				) ORDER BY u1.live_started_at), '[]')
 			FROM
 				videos AS u1
 			WHERE

@@ -13,8 +13,8 @@ type Channel struct {
 	ReceivedChatCount  int64                         `db:"received_chat_count" json:"received_chat_count"`
 	SentSuperChats     SuperChatPerCurrencyUnitSlice `db:"sent_super_chats" json:"sent_super_chats"`
 	ReceivedSuperChats SuperChatPerCurrencyUnitSlice `db:"received_super_chats" json:"received_super_chats"`
-	Badges             BadgeSlice                    `db:"badges" json:"badges,omitempty"`
-	Videos             VideoSlice                    `db:"videos" json:"videos,omitempty"`
+	Badges             BadgeSlice                    `db:"badges" json:"badges"`
+	Videos             VideoSlice                    `db:"videos" json:"videos"`
 }
 
 type ChannelSlice []Channel

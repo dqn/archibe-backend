@@ -72,7 +72,10 @@ func (a *ArchiveFetcher) handleTextMessage(renderer *chatlog.LiveChatTextMessage
 	for _, b := range renderer.AuthorBadges {
 		switch b.LiveChatAuthorBadgeRenderer.Icon.IconType {
 		case "OWNER":
-			// do nothing
+			a.result.Badges = append(a.result.Badges, models.Badge{
+				ChatID:    renderer.ID,
+				BadgeType: "owner",
+			})
 
 		case "MODERATOR":
 			a.result.Badges = append(a.result.Badges, models.Badge{
@@ -80,13 +83,23 @@ func (a *ArchiveFetcher) handleTextMessage(renderer *chatlog.LiveChatTextMessage
 				BadgeType: "moderator",
 			})
 
-		default:
+		case "VERIFIED":
+			a.result.Badges = append(a.result.Badges, models.Badge{
+				ChatID:    renderer.ID,
+				BadgeType: "verified",
+				Label:     b.LiveChatAuthorBadgeRenderer.Accessibility.AccessibilityData.Label,
+			})
+
+		case "":
 			a.result.Badges = append(a.result.Badges, models.Badge{
 				ChatID:    renderer.ID,
 				BadgeType: "member",
 				ImageURL:  retrieveImageURL(b.LiveChatAuthorBadgeRenderer.CustomThumbnail.Thumbnails),
 				Label:     b.LiveChatAuthorBadgeRenderer.Accessibility.AccessibilityData.Label,
 			})
+
+		default:
+			return fmt.Errorf("unknown icon type: %#v\n", b.LiveChatAuthorBadgeRenderer)
 		}
 	}
 

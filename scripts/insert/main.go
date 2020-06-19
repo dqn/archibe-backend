@@ -51,7 +51,7 @@ func fetchArchiveData(videoID string) (*ArchiveData, error) {
 	}
 
 	if !pr.VideoDetails.IsLiveContent {
-		err = fmt.Errorf("%s: not live content", videoID)
+		err = fmt.Errorf("not a live content")
 		return nil, err
 	}
 

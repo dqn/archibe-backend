@@ -180,8 +180,7 @@ func run() error {
 	}
 
 	var wg sync.WaitGroup
-	var mux sync.Mutex
-	archiveDataList := make([]*ArchiveData, 0, (len(videos)))
+	ch := make(chan *ArchiveData, len(videos))
 
 	wg.Add(len(videos))
 	for _, video := range videos {
@@ -192,7 +191,7 @@ func run() error {
 
 			exists, err := videoExists(db, videoID)
 			if err != nil {
-				fmt.Fprintln(os.Stderr, err)
+				fmt.Fprintf(os.Stderr, "%s: %s\n", videoID, err)
 				return
 			}
 			if exists {
@@ -202,22 +201,23 @@ func run() error {
 
 			a, err := fetchArchiveData(videoID)
 			if err != nil {
-				fmt.Fprintln(os.Stderr, err)
+				fmt.Fprintf(os.Stderr, "%s: %s\n", videoID, err)
 				return
 			}
 
-			mux.Lock()
-			defer mux.Unlock()
-			archiveDataList = append(archiveDataList, a)
-
-			remaining := len(videos) - len(archiveDataList)
-			fmt.Printf("%s: finished fetching (remaining: %d)\n", a.Video.VideoID, remaining)
+			fmt.Printf("%s: finished fetching\n", a.Video.VideoID)
+			ch <- a
 		}(video.VideoID)
 	}
-	wg.Wait()
+
+	go func() {
+		wg.Wait()
+		close(ch)
+	}()
 
 	dbx := dbexec.NewExecutor(db)
-	for i, data := range archiveDataList {
+
+	for data := range ch {
 		fmt.Printf("%s: start inserting...\n", data.Video.VideoID)
 
 		if err = insertArchiveData(*dbx, data); err != nil {
@@ -225,15 +225,14 @@ func run() error {
 
 			path := fmt.Sprintf("./data/%s.json", data.Video.VideoID)
 			if err = saveArchiveData(path, data); err != nil {
-				fmt.Fprintln(os.Stderr, err)
+				fmt.Fprintf(os.Stderr, "%s: %s\n", data.Video.VideoID, err)
 			} else {
 				fmt.Printf("saved: %s\n", path)
 			}
 			continue
 		}
 
-		remaining := len(archiveDataList) - i
-		fmt.Printf("%s: finished inserting (remaining: %d) \n", data.Video.VideoID, remaining)
+		fmt.Printf("%s: finished inserting \n", data.Video.VideoID)
 	}
 
 	return nil

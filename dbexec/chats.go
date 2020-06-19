@@ -10,7 +10,7 @@ import (
 )
 
 type ChatsExecutor struct {
-	tx *sqlx.Tx
+	db *sqlx.DB
 }
 
 func (e *ChatsExecutor) InsertMany(chats []models.Chat) (sql.Result, error) {
@@ -57,17 +57,7 @@ func (e *ChatsExecutor) InsertMany(chats []models.Chat) (sql.Result, error) {
 			created_at TIMESTAMPTZ,
 			updated_at TIMESTAMPTZ
 		)
-	ON CONFLICT(chat_id) DO UPDATE SET
-		author_channel_id = EXCLUDED.author_channel_id,
-		video_id = EXCLUDED.video_id,
-		type = EXCLUDED.type,
-		timestamp = EXCLUDED.timestamp,
-		timestamp_usec = EXCLUDED.timestamp_usec,
-		message_elements = EXCLUDED.message_elements,
-		purchase_amount = EXCLUDED.purchase_amount,
-		currency_unit = EXCLUDED.currency_unit,
-		super_chat_context = EXCLUDED.super_chat_context,
-		updated_at = EXCLUDED.updated_at
+	ON CONFLICT(chat_id) DO NOTHING
 	`
 
 	b, err := json.Marshal(chats)
@@ -75,7 +65,7 @@ func (e *ChatsExecutor) InsertMany(chats []models.Chat) (sql.Result, error) {
 		return nil, err
 	}
 
-	return e.tx.Exec(sql, string(b))
+	return e.db.Exec(sql, string(b))
 }
 
 type ChatsQuery struct {
@@ -172,7 +162,7 @@ func (e *ChatsExecutor) FindByQuery(query *ChatsQuery) ([]models.Chat, error) {
 	`
 
 	chats := []models.Chat{}
-	if err := e.tx.Select(&chats, sql, query.Q, query.Channel, query.Video, query.Limit, query.Offset); err != nil {
+	if err := e.db.Select(&chats, sql, query.Q, query.Channel, query.Video, query.Limit, query.Offset); err != nil {
 		return nil, err
 	}
 

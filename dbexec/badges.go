@@ -9,7 +9,7 @@ import (
 )
 
 type BadgesExecutor struct {
-	tx *sqlx.Tx
+	db *sqlx.DB
 }
 
 func (e *BadgesExecutor) InsertMany(badges []models.Badge) (sql.Result, error) {
@@ -39,7 +39,6 @@ func (e *BadgesExecutor) InsertMany(badges []models.Badge) (sql.Result, error) {
 			updated_at TIMESTAMPTZ
 		)
 	ON CONFLICT (chat_id, badge_type) DO UPDATE SET
-		badge_type = EXCLUDED.badge_type,
 		image_url = EXCLUDED.image_url,
 		label = EXCLUDED.label,
 		updated_at = EXCLUDED.updated_at
@@ -50,7 +49,7 @@ func (e *BadgesExecutor) InsertMany(badges []models.Badge) (sql.Result, error) {
 		return nil, err
 	}
 
-	return e.tx.Exec(sql, string(b))
+	return e.db.Exec(sql, string(b))
 }
 
 func (e *BadgesExecutor) FindByChannelID(channelID string) ([]models.Badge, error) {
@@ -69,7 +68,7 @@ func (e *BadgesExecutor) FindByChannelID(channelID string) ([]models.Badge, erro
 	`
 
 	badges := []models.Badge{}
-	if err := e.tx.Select(&badges, sql, channelID); err != nil {
+	if err := e.db.Select(&badges, sql, channelID); err != nil {
 		return nil, err
 	}
 

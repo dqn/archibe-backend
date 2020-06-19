@@ -18,7 +18,7 @@ func TestVideosInsertOne(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ex := VideosExecutor{db.MustBegin()}
+	ex := VideosExecutor{db}
 
 	now := time.Now()
 	_, err = ex.InsertOne(&models.Video{
@@ -49,7 +49,7 @@ func TestVideosFind(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ex := VideosExecutor{db.MustBegin()}
+	ex := VideosExecutor{db}
 
 	_, err = ex.Find("VIDEO_A")
 	if err != nil {

@@ -8,7 +8,7 @@ import (
 )
 
 type VideosExecutor struct {
-	tx *sqlx.Tx
+	db *sqlx.DB
 }
 
 func (e *VideosExecutor) InsertOne(video *models.Video) (sql.Result, error) {
@@ -49,23 +49,18 @@ func (e *VideosExecutor) InsertOne(video *models.Video) (sql.Result, error) {
 		COALESCE(:updated_at, NOW())
 	)
 	ON CONFLICT(video_id) DO UPDATE SET
-		channel_id = EXCLUDED.channel_id,
 		title = EXCLUDED.title,
 		description = EXCLUDED.description,
-		length_seconds = EXCLUDED.length_seconds,
 		view_count = EXCLUDED.view_count,
 		average_rating = EXCLUDED.average_rating,
 		thumbnail_url = EXCLUDED.thumbnail_url,
 		category = EXCLUDED.category,
 		is_private = EXCLUDED.is_private,
 		publish_date = EXCLUDED.publish_date,
-		upload_date = EXCLUDED.upload_date,
-		live_started_at = EXCLUDED.live_started_at,
-		live_ended_at = EXCLUDED.live_ended_at,
 		updated_at = EXCLUDED.updated_at
 	`
 
-	return e.tx.NamedExec(sql, video)
+	return e.db.NamedExec(sql, video)
 }
 
 func (e *VideosExecutor) Find(videoID string) (*models.Video, error) {
@@ -124,7 +119,7 @@ func (e *VideosExecutor) Find(videoID string) (*models.Video, error) {
 	`
 
 	var video models.Video
-	if err := e.tx.Get(&video, sql, videoID); err != nil {
+	if err := e.db.Get(&video, sql, videoID); err != nil {
 		return nil, err
 	}
 

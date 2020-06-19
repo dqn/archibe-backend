@@ -17,7 +17,7 @@ func TestBadgesInsertMany(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ex := BadgesExecutor{db.MustBegin()}
+	ex := BadgesExecutor{db}
 	_, err = ex.InsertMany([]models.Badge{
 		{
 			ChatID:    "XXX",
@@ -39,7 +39,7 @@ func TestBadgesFindByChannelID(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ex := BadgesExecutor{db.MustBegin()}
+	ex := BadgesExecutor{db}
 	badges, err := ex.FindByChannelID("CHANNEL_A")
 	if err != nil {
 		t.Fatal(err)

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strconv"
 	"sync"
 	"time"
@@ -137,6 +138,47 @@ func saveArchiveData(path string, data *ArchiveData) error {
 	return nil
 }
 
+func insertByJSON(db *sqlx.DB, dirname string) error {
+	entries, err := ioutil.ReadDir(dirname)
+	if err != nil {
+		return err
+	}
+
+	dbx := dbexec.NewExecutor(db)
+	for i, entry := range entries {
+		f, err := os.Open(filepath.Join(dirname, entry.Name()))
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s: %s\n", entry.Name(), err)
+			continue
+		}
+		defer f.Close()
+
+		b, err := ioutil.ReadAll(f)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s: %s\n", entry.Name(), err)
+			continue
+		}
+
+		var data ArchiveData
+		if err = json.Unmarshal(b, &data); err != nil {
+			fmt.Fprintf(os.Stderr, "%s: %s\n", entry.Name(), err)
+			continue
+		}
+
+		fmt.Printf("%s: start inserting...\n", data.Video.VideoID)
+
+		if err := insertArchiveData(*dbx, &data); err != nil {
+			fmt.Fprintf(os.Stderr, "%s: failed to insert: %s\n", data.Video.VideoID, err)
+			continue
+		}
+
+		remaining := len(entries) - i
+		fmt.Printf("%s: finished inserting (remaining: %d) \n", data.Video.VideoID, remaining)
+	}
+
+	return nil
+}
+
 func insertArchiveData(dbx dbexec.DBExecutor, data *ArchiveData) error {
 	_, err := dbx.Videos.InsertOne(data.Video)
 	if err != nil {
@@ -171,6 +213,9 @@ func run() error {
 		return err
 	}
 	defer db.Close()
+
+	// insertByJSON(db, "./data/")
+	// return nil
 
 	fmt.Printf("%s: start fetching channel videos...\n", channelID)
 

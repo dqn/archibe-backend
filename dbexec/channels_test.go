@@ -17,7 +17,7 @@ func TestChannelsInsertMany(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ex := ChannelsExecutor{db}
+	ex := ChannelsExecutor{db.MustBegin()}
 	_, err = ex.InsertMany([]models.Channel{
 		{
 			ChannelID: "XXX",
@@ -38,7 +38,7 @@ func TestChannelsFind(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ex := ChannelsExecutor{db}
+	ex := ChannelsExecutor{db.MustBegin()}
 	channel, err := ex.Find("CHANNEL_A")
 	if err != nil {
 		t.Fatal(err)

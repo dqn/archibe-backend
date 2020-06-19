@@ -5,19 +5,19 @@ import (
 )
 
 type DBExecutor struct {
-	DB       *sqlx.DB
+	Tx       *sqlx.Tx
 	Channels *ChannelsExecutor
 	Videos   *VideosExecutor
 	Chats    *ChatsExecutor
 	Badges   *BadgesExecutor
 }
 
-func NewExecutor(db *sqlx.DB) *DBExecutor {
+func NewExecutor(tx *sqlx.Tx) *DBExecutor {
 	return &DBExecutor{
-		DB:       db,
-		Channels: &ChannelsExecutor{db},
-		Videos:   &VideosExecutor{db},
-		Chats:    &ChatsExecutor{db},
-		Badges:   &BadgesExecutor{db},
+		Tx:       tx,
+		Channels: &ChannelsExecutor{tx},
+		Videos:   &VideosExecutor{tx},
+		Chats:    &ChatsExecutor{tx},
+		Badges:   &BadgesExecutor{tx},
 	}
 }

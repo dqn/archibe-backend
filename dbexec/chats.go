@@ -10,7 +10,7 @@ import (
 )
 
 type ChatsExecutor struct {
-	db *sqlx.DB
+	tx *sqlx.Tx
 }
 
 func (e *ChatsExecutor) InsertMany(chats []models.Chat) (sql.Result, error) {
@@ -75,7 +75,7 @@ func (e *ChatsExecutor) InsertMany(chats []models.Chat) (sql.Result, error) {
 		return nil, err
 	}
 
-	return e.db.Exec(sql, string(b))
+	return e.tx.Exec(sql, string(b))
 }
 
 type ChatsQuery struct {
@@ -172,7 +172,7 @@ func (e *ChatsExecutor) FindByQuery(query *ChatsQuery) ([]models.Chat, error) {
 	`
 
 	chats := []models.Chat{}
-	if err := e.db.Select(&chats, sql, query.Q, query.Channel, query.Video, query.Limit, query.Offset); err != nil {
+	if err := e.tx.Select(&chats, sql, query.Q, query.Channel, query.Video, query.Limit, query.Offset); err != nil {
 		return nil, err
 	}
 

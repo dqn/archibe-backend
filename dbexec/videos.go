@@ -8,7 +8,7 @@ import (
 )
 
 type VideosExecutor struct {
-	db *sqlx.DB
+	tx *sqlx.Tx
 }
 
 func (e *VideosExecutor) InsertOne(video *models.Video) (sql.Result, error) {
@@ -65,7 +65,7 @@ func (e *VideosExecutor) InsertOne(video *models.Video) (sql.Result, error) {
 		updated_at = EXCLUDED.updated_at
 	`
 
-	return e.db.NamedExec(sql, video)
+	return e.tx.NamedExec(sql, video)
 }
 
 func (e *VideosExecutor) Find(videoID string) (*models.Video, error) {
@@ -124,7 +124,7 @@ func (e *VideosExecutor) Find(videoID string) (*models.Video, error) {
 	`
 
 	var video models.Video
-	if err := e.db.Get(&video, sql, videoID); err != nil {
+	if err := e.tx.Get(&video, sql, videoID); err != nil {
 		return nil, err
 	}
 

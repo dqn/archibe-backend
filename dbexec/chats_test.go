@@ -17,7 +17,7 @@ func TestChatsInsertMany(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ex := ChatsExecutor{db}
+	ex := ChatsExecutor{db.MustBegin()}
 	_, err = ex.InsertMany([]models.Chat{
 		{
 			AuthorChannelID: "AAAAA",
@@ -51,7 +51,7 @@ func TestChatsFindByQuery(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ex := ChatsExecutor{db}
+	ex := ChatsExecutor{db.MustBegin()}
 	chats, err := ex.FindByQuery(&ChatsQuery{
 		Q:       "hell*",
 		Channel: "CHANNEL_A",

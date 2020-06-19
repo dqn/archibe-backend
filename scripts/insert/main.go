@@ -32,6 +32,14 @@ func run() error {
 	dsn := os.Args[1]
 	videoID := os.Args[2]
 
+	db, err := sqlx.Open("postgres", dsn)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	dbx := dbexec.NewExecutor(db.MustBegin())
+
 	fmt.Println("start fetching chats...")
 
 	fetcher := archive.NewFetcher(videoID)
@@ -62,13 +70,6 @@ func run() error {
 	}
 
 	fmt.Println("start inserting to database...")
-
-	db, err := sqlx.Open("postgres", dsn)
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-	dbx := dbexec.NewExecutor(db)
 
 	lengthSeconds, err := strconv.ParseInt(pmr.LengthSeconds, 10, 64)
 	if err != nil {
@@ -121,6 +122,10 @@ func run() error {
 	}
 	_, err = dbx.Badges.InsertMany(acv.Badges)
 	if err != nil {
+		return err
+	}
+
+	if err = dbx.Tx.Commit(); err != nil {
 		return err
 	}
 

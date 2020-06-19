@@ -9,7 +9,7 @@ import (
 )
 
 type ChannelsExecutor struct {
-	db *sqlx.DB
+	tx *sqlx.Tx
 }
 
 func (e *ChannelsExecutor) InsertMany(channels []models.Channel) (sql.Result, error) {
@@ -46,7 +46,7 @@ func (e *ChannelsExecutor) InsertMany(channels []models.Channel) (sql.Result, er
 		return nil, err
 	}
 
-	return e.db.Exec(sql, string(b))
+	return e.tx.Exec(sql, string(b))
 }
 
 type ChannelsQuery struct {
@@ -107,7 +107,7 @@ func (e *ChannelsExecutor) FindByQuery(query *ChannelsQuery) ([]models.Channel, 
 	`
 
 	channels := []models.Channel{}
-	if err := e.db.Select(&channels, sql, query.Q, query.Limit, query.Offset); err != nil {
+	if err := e.tx.Select(&channels, sql, query.Q, query.Limit, query.Offset); err != nil {
 		return nil, err
 	}
 
@@ -268,7 +268,7 @@ func (e *ChannelsExecutor) Find(channelID string) (*models.Channel, error) {
 	`
 
 	var channel models.Channel
-	err := e.db.Get(&channel, sql, channelID)
+	err := e.tx.Get(&channel, sql, channelID)
 	if err != nil {
 		return nil, err
 	}

@@ -4,16 +4,26 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/dqn/tubekids/dbexec"
 	"github.com/dqn/tubekids/models"
 	"github.com/dqn/tubekids/youtube/archive"
 	"github.com/dqn/tubekids/youtube/scrape"
+	"github.com/dqn/ytcv"
 	"github.com/dqn/ytvi"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
+
+func videoExists(db *sqlx.DB, videoID string) (bool, error) {
+	videoIDs := []string{}
+	if err := db.Select(&videoIDs, "SELECT video_id FROM videos WHERE video_id = $1", videoID); err != nil {
+		return false, err
+	}
+	return (len(videoIDs) == 1), nil
+}
 
 func channelExists(channels []models.Channel, channelID string) bool {
 	for i := range channels {
@@ -24,31 +34,30 @@ func channelExists(channels []models.Channel, channelID string) bool {
 	return false
 }
 
-func run() error {
-	if len(os.Args) != 3 {
-		return fmt.Errorf("invalid arguments")
-	}
-
-	dsn := os.Args[1]
-	videoID := os.Args[2]
-
-	db, err := sqlx.Open("postgres", dsn)
+func executeVideo(db *sqlx.DB, videoID string) error {
+	exists, err := videoExists(db, videoID)
 	if err != nil {
 		return err
 	}
-	defer db.Close()
 
-	dbx := dbexec.NewExecutor(db.MustBegin())
+	if exists {
+		fmt.Printf("%s: already fetched\n", videoID)
+		return nil
+	}
 
-	fmt.Println("start fetching chats...")
+	fmt.Printf("%s: start fetching chats...\n", videoID)
+	pr, err := ytvi.GetVideoInfo(videoID)
+	if err != nil {
+		return err
+	}
+
+	if !pr.VideoDetails.IsLiveContent {
+		fmt.Printf("%s: not live content\n", videoID)
+		return nil
+	}
 
 	fetcher := archive.NewFetcher(videoID)
 	acv, err := fetcher.Fetch()
-	if err != nil {
-		return err
-	}
-
-	pr, err := ytvi.GetVideoInfo(videoID)
 	if err != nil {
 		return err
 	}
@@ -69,7 +78,7 @@ func run() error {
 		acv.Channels = append(acv.Channels, ownerChannel)
 	}
 
-	fmt.Println("start inserting to database...")
+	fmt.Printf("%s: start inserting to database...\n", videoID)
 
 	lengthSeconds, err := strconv.ParseInt(pmr.LengthSeconds, 10, 64)
 	if err != nil {
@@ -108,6 +117,12 @@ func run() error {
 		LiveEndedAt:   &pmr.LiveBroadcastDetails.EndTimestamp,
 	}
 
+	tx, err := db.Beginx()
+	if err != nil {
+		return err
+	}
+	dbx := dbexec.NewExecutor(tx)
+
 	_, err = dbx.Videos.InsertOne(&video)
 	if err != nil {
 		return err
@@ -129,7 +144,44 @@ func run() error {
 		return err
 	}
 
-	fmt.Println("completed!")
+	fmt.Printf("%s: completed!\n", videoID)
+
+	return nil
+}
+
+func run() error {
+	if len(os.Args) != 3 {
+		return fmt.Errorf("invalid arguments")
+	}
+
+	dsn := os.Args[1]
+	channelID := os.Args[2]
+
+	db, err := sqlx.Open("postgres", dsn)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	fmt.Printf("%s: start fetching channel videos...\n", channelID)
+
+	videos, err := ytcv.FetchAll(channelID)
+	if err != nil {
+		return err
+	}
+
+	var wg sync.WaitGroup
+	wg.Add(len(videos))
+	for _, video := range videos {
+		go func(videoID string) {
+			err := executeVideo(db, videoID)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, err)
+			}
+			wg.Done()
+		}(video.VideoID)
+	}
+	wg.Wait()
 
 	return nil
 }

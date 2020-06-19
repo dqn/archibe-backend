@@ -26,7 +26,7 @@ initdb:
 	go run ./scripts/initdb/main.go ${DSN}
 
 insert:
-	go run ./scripts/insert/main.go ${DSN} ${VIDEO_ID}
+	go run ./scripts/insert/main.go ${DSN} ${CHANNEL_ID}
 
 test:
 	(docker rm tubekids-test -f || true) > /dev/null 2>&1

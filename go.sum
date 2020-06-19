@@ -6,6 +6,8 @@ github.com/dgrijalva/jwt-go v3.2.0+incompatible h1:7qlOGliEKZXTDg6OTjfoBKDXWrumC
 github.com/dgrijalva/jwt-go v3.2.0+incompatible/go.mod h1:E3ru+11k8xSBh+hMPgOLZmtrrCbhqsmaPHjLKYnJCaQ=
 github.com/dqn/chatlog v0.0.0-20200606192617-6641f6b2fc9f h1:oQ388FlmYlLFYklzEeWToFk5o4cOqiAEgBpjGeeiG7o=
 github.com/dqn/chatlog v0.0.0-20200606192617-6641f6b2fc9f/go.mod h1:zGROyJDGGUdOn+YAJ4vrn3Dr8IRocDeUc3GQB80zWWw=
+github.com/dqn/ytcv v0.0.0-20200618155029-98341f30080a h1:QAYfWMuu6UVTqO2DBeTpjNXk3Lixxvy/KjV3expqo5w=
+github.com/dqn/ytcv v0.0.0-20200618155029-98341f30080a/go.mod h1:e6XH5Dc2uNBWmOzd5GKZMLKfLjTS9l6tImUtT0QbrGo=
 github.com/dqn/ytvi v0.0.0-20200606201819-626a010ddfd8 h1:csGyn1Qj8G8ZXyyFUvQEBuIbKigfp5FdGPjzdFNYquA=
 github.com/dqn/ytvi v0.0.0-20200606201819-626a010ddfd8/go.mod h1:tk1w6fTDvESH7K6RsqTsPsjB+WD/pp/hVFg6zpqiHVE=
 github.com/go-sql-driver/mysql v1.4.0 h1:7LxgVwFb2hIQtMm87NdgAVfXjnt4OePseqT1tKx+opk=

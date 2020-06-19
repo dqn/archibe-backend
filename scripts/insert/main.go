@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strconv"
 	"sync"
@@ -16,6 +18,13 @@ import (
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
+
+type ArchiveData struct {
+	Video    *models.Video    `json:"video"`
+	Channels []models.Channel `json:"channels"`
+	Chats    []models.Chat    `json:"chats"`
+	Badges   []models.Badge   `json:"badges"`
+}
 
 func videoExists(db *sqlx.DB, videoID string) (bool, error) {
 	videoIDs := []string{}
@@ -34,39 +43,28 @@ func channelExists(channels []models.Channel, channelID string) bool {
 	return false
 }
 
-func executeVideo(db *sqlx.DB, videoID string) error {
-	exists, err := videoExists(db, videoID)
-	if err != nil {
-		return err
-	}
-
-	if exists {
-		fmt.Printf("%s: already fetched\n", videoID)
-		return nil
-	}
-
-	fmt.Printf("%s: start fetching chats...\n", videoID)
+func fetchArchiveData(videoID string) (*ArchiveData, error) {
 	pr, err := ytvi.GetVideoInfo(videoID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if !pr.VideoDetails.IsLiveContent {
-		fmt.Printf("%s: not live content\n", videoID)
-		return nil
+		err = fmt.Errorf("%s: not live content", videoID)
+		return nil, err
 	}
 
 	fetcher := archive.NewFetcher(videoID)
 	acv, err := fetcher.Fetch()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	pmr := pr.Microformat.PlayerMicroformatRenderer
 	if !channelExists(acv.Channels, pmr.ExternalChannelID) {
 		channelImageURL, err := scrape.RetrieveChannelImageURL(pmr.OwnerProfileURL)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		ownerChannel := models.Channel{
@@ -78,23 +76,21 @@ func executeVideo(db *sqlx.DB, videoID string) error {
 		acv.Channels = append(acv.Channels, ownerChannel)
 	}
 
-	fmt.Printf("%s: start inserting to database...\n", videoID)
-
 	lengthSeconds, err := strconv.ParseInt(pmr.LengthSeconds, 10, 64)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	viewCount, err := strconv.ParseInt(pmr.ViewCount, 10, 64)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	publishDate, err := time.Parse("2006-01-02", pmr.PublishDate)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	uploadDate, err := time.Parse("2006-01-02", pmr.UploadDate)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	thumbnails := pr.VideoDetails.Thumbnail.Thumbnails
@@ -117,34 +113,47 @@ func executeVideo(db *sqlx.DB, videoID string) error {
 		LiveEndedAt:   &pmr.LiveBroadcastDetails.EndTimestamp,
 	}
 
-	tx, err := db.Beginx()
-	if err != nil {
-		return err
+	a := ArchiveData{
+		Video:    &video,
+		Channels: acv.Channels,
+		Chats:    acv.Chats,
+		Badges:   acv.Badges,
 	}
-	dbx := dbexec.NewExecutor(tx)
 
-	_, err = dbx.Videos.InsertOne(&video)
-	if err != nil {
-		return err
-	}
-	_, err = dbx.Channels.InsertMany(acv.Channels)
-	if err != nil {
-		return err
-	}
-	_, err = dbx.Chats.InsertMany(acv.Chats)
-	if err != nil {
-		return err
-	}
-	_, err = dbx.Badges.InsertMany(acv.Badges)
+	return &a, nil
+}
+
+func saveArchiveData(path string, data *ArchiveData) error {
+	b, err := json.Marshal(data)
 	if err != nil {
 		return err
 	}
 
-	if err = dbx.Tx.Commit(); err != nil {
+	err = ioutil.WriteFile(path, b, 0644)
+	if err != nil {
 		return err
 	}
 
-	fmt.Printf("%s: completed!\n", videoID)
+	return nil
+}
+
+func insertArchiveData(dbx dbexec.DBExecutor, data *ArchiveData) error {
+	_, err := dbx.Videos.InsertOne(data.Video)
+	if err != nil {
+		return err
+	}
+	_, err = dbx.Channels.InsertMany(data.Channels)
+	if err != nil {
+		return err
+	}
+	_, err = dbx.Chats.InsertMany(data.Chats)
+	if err != nil {
+		return err
+	}
+	_, err = dbx.Badges.InsertMany(data.Badges)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -171,17 +180,61 @@ func run() error {
 	}
 
 	var wg sync.WaitGroup
+	var mux sync.Mutex
+	archiveDataList := make([]*ArchiveData, 0, (len(videos)))
+
 	wg.Add(len(videos))
 	for _, video := range videos {
 		go func(videoID string) {
-			err := executeVideo(db, videoID)
+			defer wg.Done()
+
+			fmt.Printf("%s: start fetching chats...\n", videoID)
+
+			exists, err := videoExists(db, videoID)
 			if err != nil {
 				fmt.Fprintln(os.Stderr, err)
+				return
 			}
-			wg.Done()
+			if exists {
+				fmt.Printf("%s: already fetched\n", videoID)
+				return
+			}
+
+			a, err := fetchArchiveData(videoID)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				return
+			}
+
+			mux.Lock()
+			defer mux.Unlock()
+			archiveDataList = append(archiveDataList, a)
+
+			remaining := len(videos) - len(archiveDataList)
+			fmt.Printf("%s: finished fetching (remaining: %d)\n", a.Video.VideoID, remaining)
 		}(video.VideoID)
 	}
 	wg.Wait()
+
+	dbx := dbexec.NewExecutor(db)
+	for i, data := range archiveDataList {
+		fmt.Printf("%s: start inserting...\n", data.Video.VideoID)
+
+		if err = insertArchiveData(*dbx, data); err != nil {
+			fmt.Fprintf(os.Stderr, "%s: failed to insert: %s\n", data.Video.VideoID, err)
+
+			path := fmt.Sprintf("./data/%s.json", data.Video.VideoID)
+			if err = saveArchiveData(path, data); err != nil {
+				fmt.Fprintln(os.Stderr, err)
+			} else {
+				fmt.Printf("saved: %s\n", path)
+			}
+			continue
+		}
+
+		remaining := len(archiveDataList) - i
+		fmt.Printf("%s: finished inserting (remaining: %d) \n", data.Video.VideoID, remaining)
+	}
 
 	return nil
 }

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"strconv"
 	"sync"
 	"time"
@@ -138,68 +137,6 @@ func saveArchiveData(path string, data *ArchiveData) error {
 	return nil
 }
 
-func insertByJSON(db *sqlx.DB, dirname string) error {
-	entries, err := ioutil.ReadDir(dirname)
-	if err != nil {
-		return err
-	}
-
-	dbx := dbexec.NewExecutor(db)
-	for i, entry := range entries {
-		f, err := os.Open(filepath.Join(dirname, entry.Name()))
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s: %s\n", entry.Name(), err)
-			continue
-		}
-		defer f.Close()
-
-		b, err := ioutil.ReadAll(f)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s: %s\n", entry.Name(), err)
-			continue
-		}
-
-		var data ArchiveData
-		if err = json.Unmarshal(b, &data); err != nil {
-			fmt.Fprintf(os.Stderr, "%s: %s\n", entry.Name(), err)
-			continue
-		}
-
-		fmt.Printf("%s: start inserting...\n", data.Video.VideoID)
-
-		if err := insertArchiveData(*dbx, &data); err != nil {
-			fmt.Fprintf(os.Stderr, "%s: failed to insert: %s\n", data.Video.VideoID, err)
-			continue
-		}
-
-		remaining := len(entries) - i
-		fmt.Printf("%s: finished inserting (remaining: %d) \n", data.Video.VideoID, remaining)
-	}
-
-	return nil
-}
-
-func insertArchiveData(dbx dbexec.DBExecutor, data *ArchiveData) error {
-	_, err := dbx.Videos.InsertOne(data.Video)
-	if err != nil {
-		return err
-	}
-	_, err = dbx.Channels.InsertMany(data.Channels)
-	if err != nil {
-		return err
-	}
-	_, err = dbx.Chats.InsertMany(data.Chats)
-	if err != nil {
-		return err
-	}
-	_, err = dbx.Badges.InsertMany(data.Badges)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func run() error {
 	if len(os.Args) != 3 {
 		return fmt.Errorf("invalid arguments")
@@ -214,9 +151,6 @@ func run() error {
 	}
 	defer db.Close()
 
-	// insertByJSON(db, "./data/")
-	// return nil
-
 	fmt.Printf("%s: start fetching channel videos...\n", channelID)
 
 	videos, err := ytcv.FetchAll(channelID)
@@ -224,13 +158,19 @@ func run() error {
 		return err
 	}
 
-	var wg sync.WaitGroup
-	ch := make(chan *ArchiveData, len(videos))
+	nVideo := len(videos)
+	videoCh := make(chan *models.Video, nVideo)
+	channelsCh := make(chan []models.Channel, nVideo)
+	chatsCh := make(chan []models.Chat, nVideo)
+	badgesCh := make(chan []models.Badge, nVideo)
 
-	wg.Add(len(videos))
+	var fetchingWG sync.WaitGroup
+	var insertingWG sync.WaitGroup
+
 	for _, video := range videos {
+		fetchingWG.Add(1)
 		go func(videoID string) {
-			defer wg.Done()
+			defer fetchingWG.Done()
 
 			fmt.Printf("%s: start fetching chats...\n", videoID)
 
@@ -251,34 +191,49 @@ func run() error {
 			}
 
 			fmt.Printf("%s: finished fetching\n", a.Video.VideoID)
-			ch <- a
+			insertingWG.Add(4)
+
+			videoCh <- a.Video
+			channelsCh <- a.Channels
+			chatsCh <- a.Chats
+			badgesCh <- a.Badges
 		}(video.VideoID)
 	}
 
+	dbx := dbexec.NewExecutor(db)
+	endCh := make(chan struct{})
+
 	go func() {
-		wg.Wait()
-		close(ch)
+		fetchingWG.Wait()
+		insertingWG.Wait()
+		close(endCh)
 	}()
 
-	dbx := dbexec.NewExecutor(db)
-
-	for data := range ch {
-		fmt.Printf("%s: start inserting...\n", data.Video.VideoID)
-
-		if err = insertArchiveData(*dbx, data); err != nil {
-			fmt.Fprintf(os.Stderr, "%s: failed to insert: %s\n", data.Video.VideoID, err)
-
-			path := fmt.Sprintf("./data/%s.json", data.Video.VideoID)
-			if err = saveArchiveData(path, data); err != nil {
-				fmt.Fprintf(os.Stderr, "%s: %s\n", data.Video.VideoID, err)
-			} else {
-				fmt.Printf("saved: %s\n", path)
-			}
-			continue
+OuterLoop:
+	for {
+		select {
+		case video := <-videoCh:
+			fmt.Println("start inserting a video...")
+			_, err = dbx.Videos.InsertOne(video)
+		case channels := <-channelsCh:
+			fmt.Printf("start inserting %d channels...\n", len(channels))
+			_, err = dbx.Channels.InsertMany(channels)
+		case chats := <-chatsCh:
+			fmt.Printf("start inserting %d chats...\n", len(chats))
+			_, err = dbx.Chats.InsertMany(chats)
+		case badges := <-badgesCh:
+			fmt.Printf("start inserting %d badges...\n", len(badges))
+			_, err = dbx.Badges.InsertMany(badges)
+		case <-endCh:
+			break OuterLoop
 		}
-
-		fmt.Printf("%s: finished inserting \n", data.Video.VideoID)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "failed to insert: %s\n", err)
+		}
+		insertingWG.Done()
 	}
+
+	fmt.Println("completed!")
 
 	return nil
 }

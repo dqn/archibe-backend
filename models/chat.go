@@ -19,8 +19,8 @@ type Chat struct {
 	CreatedAt        *time.Time          `db:"created_at" json:"created_at"`
 	UpdatedAt        *time.Time          `db:"updated_at" json:"updated_at"`
 	Channel          *Channel            `db:"channel" json:"channel,omitempty"`
-	Video            *Video              `db:"video" json:"video,omitempty"`
-	Badges           BadgeSlice          `db:"badges" json:"badges,omitempty"`
+	Video            *Video              `db:"video" json:"video"`
+	Badges           BadgeSlice          `db:"badges" json:"badges"`
 }
 
 type ChatSlice []Chat

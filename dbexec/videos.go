@@ -2,6 +2,7 @@ package dbexec
 
 import (
 	"database/sql"
+	"strings"
 
 	"github.com/dqn/tubekids/models"
 	"github.com/jmoiron/sqlx"
@@ -61,6 +62,74 @@ func (e *VideosExecutor) InsertOne(video *models.Video) (sql.Result, error) {
 	`
 
 	return e.db.NamedExec(sql, video)
+}
+
+type VideosQuery struct {
+	Q       string
+	Channel string
+	Order   string
+	Limit   uint64
+	Offset  uint64
+}
+
+func (e *VideosExecutor) FindByQuery(query *VideosQuery) ([]models.Video, error) {
+	order := strings.ToUpper(query.Order)
+	if order != "DESC" {
+		order = "ASC"
+	}
+
+	sql := `
+	SELECT
+		t1.id,
+		t1.video_id,
+		t1.channel_id,
+		t1.title,
+		t1.description,
+		t1.length_seconds,
+		t1.view_count,
+		t1.average_rating,
+		t1.thumbnail_url,
+		t1.category,
+		t1.is_private,
+		t1.publish_date,
+		t1.upload_date,
+		t1.live_started_at,
+		t1.live_ended_at,
+		t1.created_at,
+		t1.updated_at,
+		t2.id AS "channel.id",
+		t2.channel_id AS "channel.channel_id",
+		t2.name AS "channel.name",
+		t2.image_url AS "channel.image_url",
+		t2.created_at AS "channel.created_at",
+		t2.updated_at AS "channel.updated_at"
+	FROM
+		videos AS t1
+		INNER JOIN channels AS t2 ON (
+			t1.channel_id = t2.channel_id
+		)
+	WHERE
+		(
+			$1 = ''
+			OR t1.title ~ $1
+		) AND (
+			$2 = ''
+			OR t1.channel_id = $2
+		)
+	ORDER BY
+		t1.publish_date ` + order + `
+	LIMIT
+		$3
+	OFFSET
+		$4
+	`
+
+	videos := []models.Video{}
+	if err := e.db.Select(&videos, sql, query.Q, query.Channel, query.Limit, query.Offset); err != nil {
+		return nil, err
+	}
+
+	return videos, nil
 }
 
 func (e *VideosExecutor) Find(videoID string) (*models.Video, error) {

@@ -14,13 +14,14 @@ type App struct {
 
 func (a *App) routes() {
 	channels := controllers.ChannelsController{DBX: a.DBX}
-	a.Server.GET("/api/channels/:id", channels.GetChannel)
 	a.Server.GET("/api/channels", channels.GetChannels)
+	a.Server.GET("/api/channels/:id", channels.GetChannel)
 
 	chats := controllers.ChatsController{DBX: a.DBX}
 	a.Server.GET("/api/chats", chats.GetChats)
 
 	videos := controllers.VideosController{DBX: a.DBX}
+	a.Server.GET("/api/videos", videos.GetVideos)
 	a.Server.GET("/api/videos/:id", videos.GetVideo)
 }
 

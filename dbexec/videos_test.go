@@ -42,6 +42,28 @@ func TestVideosInsertOne(t *testing.T) {
 	}
 }
 
+func TestVideosFindByQuery(t *testing.T) {
+	dsn := os.Getenv("DSN")
+
+	db, err := sqlx.Open("postgres", dsn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ex := VideosExecutor{db}
+	chats, err := ex.FindByQuery(&VideosQuery{
+		Channel: "CHANNEL_A",
+		Limit:   10,
+		Offset:  0,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(chats) != 1 {
+		t.Fatal("number of retrieved chats do not match")
+	}
+}
+
 func TestVideosFind(t *testing.T) {
 	dsn := os.Getenv("DSN")
 

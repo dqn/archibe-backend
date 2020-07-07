@@ -1,11 +1,17 @@
-# tubekids-backend
+# archibe-backend
 
-## Development
+## Develop
 
 ### Start database
 
 ```bash
 $ make startdb
+```
+
+### Stop database
+
+```bash
+$ make stopdb
 ```
 
 ### Init database
@@ -14,10 +20,16 @@ $ make startdb
 $ make initdb
 ```
 
-### Fetch chat data
+### Insert YouTube archive data
 
 ```bash
-$ CHANNEL_ID=<channel-id> VIDEO_ID=<video-id> make insert
+$ CHANNEL_ID=<channel-id> make insert
+```
+
+### Start Server
+
+```bash
+$ make serve
 ```
 
 ### Test
@@ -25,3 +37,7 @@ $ CHANNEL_ID=<channel-id> VIDEO_ID=<video-id> make insert
 ```bash
 $ make test
 ```
+
+## License
+
+MIT

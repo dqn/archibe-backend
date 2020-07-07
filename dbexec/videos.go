@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"strings"
 
-	"github.com/dqn/tubekids/models"
+	"github.com/dqn/archibe/models"
 	"github.com/jmoiron/sqlx"
 )
 

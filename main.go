@@ -4,8 +4,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/dqn/tubekids/app"
-	"github.com/dqn/tubekids/dbexec"
+	"github.com/dqn/archibe/app"
+	"github.com/dqn/archibe/dbexec"
 	"github.com/jmoiron/sqlx"
 	"github.com/k0kubun/pp"
 	"github.com/labstack/echo/v4"

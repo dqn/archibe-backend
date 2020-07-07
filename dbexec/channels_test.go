@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/dqn/tubekids/models"
+	"github.com/dqn/archibe/models"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )

@@ -1,8 +1,8 @@
 package app
 
 import (
-	"github.com/dqn/tubekids/app/controllers"
-	"github.com/dqn/tubekids/dbexec"
+	"github.com/dqn/archibe/app/controllers"
+	"github.com/dqn/archibe/dbexec"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )

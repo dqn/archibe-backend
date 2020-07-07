@@ -5,9 +5,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/dqn/archibe/lib"
+	"github.com/dqn/archibe/models"
 	"github.com/dqn/chatlog"
-	"github.com/dqn/tubekids/lib"
-	"github.com/dqn/tubekids/models"
 )
 
 type ArchiveFetcher struct {

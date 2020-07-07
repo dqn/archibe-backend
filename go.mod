@@ -1,4 +1,4 @@
-module github.com/dqn/tubekids
+module github.com/dqn/archibe
 
 go 1.14
 

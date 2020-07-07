@@ -3,7 +3,7 @@ package controllers
 import (
 	"net/http"
 
-	"github.com/dqn/tubekids/dbexec"
+	"github.com/dqn/archibe/dbexec"
 	"github.com/labstack/echo/v4"
 )
 

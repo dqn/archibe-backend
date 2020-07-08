@@ -100,6 +100,8 @@ func (e *ChannelsExecutor) FindByQuery(query *ChannelsQuery) ([]models.Channel, 
 	WHERE
 		$1 = ''
 		OR t1.name ~ $1
+	ORDER BY
+		t1.channel_id
 	LIMIT
 		$2
 	OFFSET

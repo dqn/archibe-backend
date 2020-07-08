@@ -38,6 +38,19 @@ $ make serve
 $ make test
 ```
 
+### Backup
+
+```bash
+$ pg_dump archibe -h 127.0.0.1 -U admin > example.dump
+```
+
+### Restore
+
+```bash
+# psql -c 'create database archibe'
+$ psql archibe < example.dump
+```
+
 ## License
 
 MIT

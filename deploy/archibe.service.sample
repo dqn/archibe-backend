@@ -1,0 +1,12 @@
+[Unit]
+Description=archibe
+After=network-online.target
+
+[Service]
+ExecStart=/home/dqn/archibe :3000 "user=admin password=admin database=archibe sslmode=disable"
+KillMode=process
+Restart=always
+WorkingDirectory=/home/dqn
+
+[Install]
+WantedBy=multi-user.target

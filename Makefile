@@ -4,7 +4,7 @@ DSN_DEVELOPMENT="user=admin password=admin database=archibe sslmode=disable"
 DSN_TEST="user=admin password=admin database=archibe-test port=5433 sslmode=disable"
 
 DSN=${DSN_DEVELOPMENT}
-ADDRESS=:3000
+ADDRESS=:4000
 
 serve:
 	go run main.go ${ADDRESS} ${DSN}
